@@ -1,0 +1,34 @@
+{
+  "name": "agent-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A local hub where coding agents (Copilot, Claude Code, Codex, Gemini) run, collaborate and can be controlled from any paired device on your LAN.",
+  "type": "module",
+  "workspaces": [
+    "packages/shared",
+    "packages/hub",
+    "packages/web",
+    "packages/desktop"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @agent-hub/hub --",
+    "dev:web": "npm run dev -w @agent-hub/web --",
+    "build": "npm run build -w @agent-hub/web && npm run build -w @agent-hub/hub && npm run build -w @agent-hub/desktop",
+    "serve": "node packages/hub/dist/cli.js serve",
+    "desktop": "npm run start -w @agent-hub/desktop",
+    "typecheck": "tsc -p packages/shared --noEmit && tsc -p packages/hub --noEmit && tsc -p packages/web --noEmit && tsc -p packages/desktop --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "lint": "npm run typecheck",
+    "dist:win": "npm run build && npm run dist -w @agent-hub/desktop"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.55.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.4"
+  }
+}

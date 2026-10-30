@@ -1,0 +1,35 @@
+appId: com.agenthub.desktop
+productName: Agent Hub
+copyright: Agent Hub
+# Keep in sync with the electron devDependency (npm workspaces hoist it, so it cannot be auto-detected).
+electronVersion: 45.1.0
+directories:
+  app: app
+  output: release
+  buildResources: build
+# Agents and the PTY spawn files from inside the package, so keep it unpacked.
+asar: false
+# node-pty ships N-API prebuilds; nothing to rebuild for Electron.
+npmRebuild: false
+nodeGypRebuild: false
+files:
+  - '**/*'
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: Agent Hub
+mac:
+  target: dmg
+  icon: build/icon.png
+  category: public.app-category.developer-tools
+linux:
+  target: AppImage
+  icon: build/icon.png
+  category: Development

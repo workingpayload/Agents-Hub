@@ -1,0 +1,11 @@
+node_modules/
+dist/
+release/
+packages/desktop/app/
+coverage/
+test-results/
+playwright-report/
+.playwright-mcp/
+.agent-hub-data/
+*.log
+.DS_Store

@@ -1,0 +1,23 @@
+{
+  "name": "@agent-hub/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Hub desktop shell (tray, pairing, native notifications).",
+  "author": "Agent Hub",
+  "main": "dist/main.cjs",
+  "scripts": {
+    "build": "tsup",
+    "start": "npm run build && electron .",
+    "stage": "node scripts/stage.mjs",
+    "dist": "npm run build && node scripts/stage.mjs && electron-builder --win --config electron-builder.yml",
+    "dist:dir": "npm run build && node scripts/stage.mjs && electron-builder --win --dir --config electron-builder.yml",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "electron": "45.1.0",
+    "electron-builder": "^26.0.12",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,56 +1,56 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/dm-sans';
-@import '@fontsource-variable/space-grotesk';
-@import '@fontsource-variable/fira-code';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
 
-/* ───────────────────────── Design tokens ───────────────────────── */
+/* ───────────────────────── Design tokens ─────────────────────────
+   One typeface (Geist), Geist Mono only for code, terminal and numeric UI.
+   Surfaces use the flat dark palette only: #000000 #181818 #1F1F1F #272727 #313131. */
 @theme {
-  --font-sans: 'DM Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Space Grotesk Variable', 'DM Sans Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Fira Code Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  --color-ink: #070b1a;
-  --color-primary: #3b82f6;
-  --color-cta: #2563eb;
+  --color-base: #000000;
+  --color-surface: #181818;
+  --color-surface-2: #1f1f1f;
+  --color-surface-3: #272727;
+  --color-surface-4: #313131;
+  --color-muted: #9b9b9b;
 
-  --ease-fluid: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-liquid: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --ease-base: cubic-bezier(0.22, 1, 0.36, 1);
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  --default-transition-duration: 300ms;
 }
 
 :root {
   color-scheme: dark;
   -webkit-tap-highlight-color: transparent;
-  --glass-tint: rgb(15 23 42 / 0.5);
-  --glass-tint-strong: rgb(13 19 38 / 0.7);
-  --glass-blur: 22px;
-  /* Space taken by the floating header (top) and the floating tab bar (bottom, phones only). */
-  --chrome-top: 5.5rem;
-  --chrome-bottom: calc(6.5rem + env(safe-area-inset-bottom));
-}
-@media (min-width: 768px) {
-  :root {
-    --chrome-top: 5rem;
-    --chrome-bottom: 2rem;
-  }
+  /* Space taken by the floating navigation bar. */
+  --chrome-top: 88px;
+  --chrome-bottom: calc(16px + env(safe-area-inset-bottom));
 }
 
-/* Only the root carries the base colour: an opaque <body> background would paint over the z-index:-1 aurora. */
 html {
-  background: var(--color-ink);
+  background: var(--color-base);
   overscroll-behavior-y: none;
 }
 
 body {
-  background: transparent;
+  background: var(--color-base);
   font-family: var(--font-sans);
-  font-feature-settings: 'ss01', 'cv11';
 }
 
 h1,
 h2,
-h3 {
-  font-family: var(--font-display);
-  letter-spacing: -0.01em;
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+p,
+li,
+dd {
+  text-wrap: pretty;
 }
 
 /* Every interactive element looks interactive. */
@@ -66,199 +66,272 @@ label[for] {
 
 /* Visible keyboard focus everywhere (mouse clicks don't show it). */
 :focus-visible {
-  outline: 2px solid #93c5fd;
+  outline: 2px solid #ffffff;
   outline-offset: 2px;
-  border-radius: 0.6rem;
+}
+
+/* ───────── Text styles (B1). Every piece of text uses exactly one of these. ───────── */
+@utility heading-1 {
+  font-size: var(--text-6xl);
+  line-height: var(--text-6xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+@utility heading-2 {
+  font-size: var(--text-5xl);
+  line-height: var(--text-5xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+@utility heading-3 {
+  font-size: var(--text-4xl);
+  line-height: var(--text-4xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+@utility heading-4 {
+  font-size: var(--text-3xl);
+  line-height: var(--text-3xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+@utility heading-5 {
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+@utility heading-6 {
+  font-size: var(--text-xl);
+  line-height: var(--text-xl--line-height);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+@utility title-1 {
+  font-size: var(--text-xl);
+  line-height: var(--text-xl--line-height);
+  font-weight: 500;
+}
+@utility title-2 {
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+  font-weight: 500;
+}
+@utility title-3 {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  font-weight: 500;
+}
+@utility title-4 {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 500;
+}
+@utility title-5 {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 500;
+}
+@utility body-1 {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  font-weight: 600;
+}
+@utility body-2 {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  font-weight: 500;
+}
+@utility body-3 {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  font-weight: 400;
+}
+@utility body-4 {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 600;
+}
+@utility body-5 {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 500;
+}
+@utility body-6 {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 400;
+}
+@utility button-lg {
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+  font-weight: 600;
+}
+@utility button-md {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+  font-weight: 600;
+}
+@utility button-sm {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 600;
+}
+@utility button-xsm {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 600;
+}
+@utility caption-1 {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 500;
+}
+@utility caption-2 {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: 400;
+}
+@utility caption-3 {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 600;
+}
+@utility caption-4 {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 500;
+}
+@utility caption-5 {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-weight: 400;
+}
+
+/* Hero heading (B5): the only gradient in the interface, and only on text. */
+@utility hero-heading {
+  max-width: 680px;
+  background-image: linear-gradient(90deg, #ffffff, #9b9b9b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 @layer components {
-  /* ───────── Liquid glass surfaces ─────────
-     .glass         top-level panel: backdrop blur + specular top edge + soft depth
-     .glass-strong  overlays/navigation: denser tint for legibility over busy content
-     .glass-inset   nested surface inside glass (no extra blur: cheaper, avoids muddy layering)
-     .glass-rim     iridescent hairline rim, the "liquid" edge highlight */
-  .glass,
-  .glass-strong {
+  /* ───────── Flat surfaces (B4): borders all the way around, never gradients. ───────── */
+  .surface {
     position: relative;
-    isolation: isolate;
-    background:
-      linear-gradient(160deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.025) 42%, rgb(255 255 255 / 0.05)),
-      var(--glass-tint);
-    backdrop-filter: blur(var(--glass-blur)) saturate(170%);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
-    border: 1px solid rgb(255 255 255 / 0.09);
-    box-shadow:
-      inset 0 1px 0 0 rgb(255 255 255 / 0.16),
-      inset 0 0 22px -8px rgb(255 255 255 / 0.08),
-      0 18px 40px -22px rgb(0 0 0 / 0.8);
+    background: var(--color-surface);
+    border: 1px solid var(--color-surface-3);
   }
-  .glass-strong {
-    background:
-      linear-gradient(160deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.03) 45%, rgb(255 255 255 / 0.06)),
-      var(--glass-tint-strong);
-    --glass-blur: 28px;
+  .surface-raised {
+    position: relative;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-surface-4);
+    box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.9);
   }
-  .glass-inset {
-    background: rgb(255 255 255 / 0.035);
-    border: 1px solid rgb(255 255 255 / 0.07);
-    box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.05);
-  }
-  .glass-rim::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    border-radius: inherit;
-    padding: 1px;
-    pointer-events: none;
-    background: linear-gradient(
-      135deg,
-      rgb(255 255 255 / 0.38),
-      rgb(147 197 253 / 0.16) 28%,
-      rgb(196 181 253 / 0.06) 55%,
-      rgb(103 232 249 / 0.14) 80%,
-      rgb(255 255 255 / 0.28)
-    );
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+  .surface-inset {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-surface-3);
   }
 
-  /* Primary action: a lens of tinted glass with a light bead along the top. */
-  .liquid-primary {
-    background:
-      linear-gradient(180deg, rgb(255 255 255 / 0.28), rgb(255 255 255 / 0) 55%),
-      linear-gradient(135deg, #3b82f6, #6366f1 55%, #8b5cf6);
-    box-shadow:
-      inset 0 1px 0 0 rgb(255 255 255 / 0.45),
-      inset 0 -6px 12px -6px rgb(30 27 75 / 0.6),
-      0 8px 24px -10px rgb(59 130 246 / 0.75);
+  .field {
+    background: var(--color-base);
+    border: 1px solid var(--color-surface-4);
+    transition: border-color 300ms var(--ease-base);
   }
-  .liquid-primary:hover:not(:disabled) {
-    background:
-      linear-gradient(180deg, rgb(255 255 255 / 0.34), rgb(255 255 255 / 0) 55%),
-      linear-gradient(135deg, #60a5fa, #818cf8 55%, #a78bfa);
+  .field:hover:not(:disabled) {
+    border-color: #4a4a4a;
+  }
+  .field:focus,
+  .field:has(textarea:focus-visible) {
+    border-color: var(--color-muted);
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
   }
 
-  .glass-field {
-    background: rgb(2 6 23 / 0.45);
-    border: 1px solid rgb(255 255 255 / 0.1);
-    box-shadow: inset 0 1px 2px 0 rgb(0 0 0 / 0.35);
+  .link {
+    color: #ffffff;
+    text-decoration: underline;
+    text-decoration-color: #6b6b6b;
+    text-underline-offset: 4px;
+    transition: text-decoration-color 300ms var(--ease-base);
   }
-  .glass-field:focus {
-    border-color: rgb(147 197 253 / 0.7);
-    box-shadow:
-      inset 0 1px 2px 0 rgb(0 0 0 / 0.35),
-      0 0 0 3px rgb(59 130 246 / 0.25);
-    outline: none;
+  .link:hover {
+    text-decoration-color: #ffffff;
   }
-  .glass-field:focus-visible {
-    outline: none;
+
+  /* Skeleton loader shaped by the caller (B9). */
+  .skeleton {
+    background: var(--color-surface-3);
+    animation: skeleton-pulse 1600ms var(--ease-base) infinite alternate;
   }
 }
 
-/* Browsers without backdrop-filter get an opaque tint so text stays readable. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :root {
-    --glass-tint: rgb(15 23 42 / 0.94);
-    --glass-tint-strong: rgb(13 19 38 / 0.97);
+@keyframes skeleton-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
   }
 }
 
-/* ───────── Ambient background: slow iridescent light behind the glass ───────── */
-.aurora {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-  background:
-    radial-gradient(1200px 600px at 50% -10%, rgb(59 130 246 / 0.16), transparent 60%),
-    linear-gradient(180deg, #070b1a, #050814 60%, #04060f);
+/* Inline busy indicator: three dots that fade in turn, used inside buttons. */
+.dots {
+  display: inline-flex;
+  gap: 4px;
 }
-.aurora span {
-  position: absolute;
+.dots span {
+  width: 4px;
+  height: 4px;
   border-radius: 9999px;
-  opacity: 0.85;
-  will-change: transform;
-  animation: aurora-drift 34s var(--ease-fluid) infinite alternate;
+  background: currentColor;
+  animation: dot-fade 900ms var(--ease-base) infinite alternate;
 }
-.aurora .a1 {
-  width: 62vmax;
-  height: 62vmax;
-  left: -18vmax;
-  top: -20vmax;
-  background: radial-gradient(closest-side, rgb(59 130 246 / 0.6), transparent);
+.dots span:nth-child(2) {
+  animation-delay: 150ms;
 }
-.aurora .a2 {
-  width: 54vmax;
-  height: 54vmax;
-  right: -16vmax;
-  top: 8vmax;
-  background: radial-gradient(closest-side, rgb(139 92 246 / 0.5), transparent);
-  animation-duration: 42s;
-  animation-delay: -8s;
+.dots span:nth-child(3) {
+  animation-delay: 300ms;
 }
-.aurora .a3 {
-  width: 48vmax;
-  height: 48vmax;
-  left: 18vmax;
-  bottom: -26vmax;
-  background: radial-gradient(closest-side, rgb(6 182 212 / 0.42), transparent);
-  animation-duration: 38s;
-  animation-delay: -16s;
+@keyframes dot-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.2;
+  }
 }
-.aurora .a4 {
-  width: 30vmax;
-  height: 30vmax;
-  right: 12vmax;
-  bottom: -6vmax;
-  background: radial-gradient(closest-side, rgb(236 72 153 / 0.3), transparent);
-  animation-duration: 46s;
-  animation-delay: -4s;
+
+/* Live status dot: a ring that scales out and fades (transform + opacity only). */
+.live-dot {
+  position: relative;
 }
-.aurora::after {
-  /* Fine grain keeps the gradients from banding and adds a frosted feel. */
+.live-dot::after {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.06;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  border-radius: inherit;
+  background: currentColor;
+  animation: live-ring 1800ms var(--ease-base) infinite;
 }
-@keyframes aurora-drift {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1);
+@keyframes live-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
   }
-  50% {
-    transform: translate3d(6vmax, 4vmax, 0) scale(1.12);
+  to {
+    transform: scale(3);
+    opacity: 0;
   }
-  100% {
-    transform: translate3d(-4vmax, 8vmax, 0) scale(0.95);
-  }
-}
-
-/* Live status dot with a soft pulse ring. */
-@keyframes pulse-ring {
-  0% {
-    box-shadow: 0 0 0 0 currentColor;
-  }
-  70% {
-    box-shadow: 0 0 0 6px transparent;
-  }
-  100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-.status-dot-live {
-  animation: pulse-ring 1.8s var(--ease-fluid) infinite;
 }
 
+/* Overlays (dialogs, menus, toasts) settle into place on the base curve. */
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -266,77 +339,126 @@ label[for] {
   }
 }
 .animate-rise {
-  animation: rise-in 360ms var(--ease-fluid) both;
+  animation: rise-in 500ms var(--ease-base) both;
 }
 
-/* Respect reduced-motion preferences: no drifting light, no springy movement. */
+/* Mobile menu links arrive in reading order, 24px rise, staggered by --delay. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.menu-item {
+  animation: menu-in 500ms var(--ease-base) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade {
+  animation: fade-in 300ms var(--ease-base) both;
+}
+
+/* Scroll reveal (B7): sections rise 32px and fade in once as they enter the viewport. */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 700ms var(--ease-base),
+    transform 700ms var(--ease-base);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Reduced motion: movement becomes a plain opacity change. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  ::before,
-  ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  .animate-rise,
+  .menu-item {
+    animation-name: fade-in;
+  }
+  .reveal {
+    transform: none;
+  }
+  .live-dot::after {
+    animation: none;
+    opacity: 0;
   }
 }
 
 /* ───────── Agent markdown output ───────── */
 .md {
   overflow-wrap: anywhere;
-  line-height: 1.65;
 }
 .md > * + * {
-  margin-top: 0.6em;
+  margin-top: 12px;
 }
 .md h1,
 .md h2,
 .md h3 {
   font-weight: 600;
-  color: #f1f5f9;
+  color: #ffffff;
 }
 .md h1 {
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
 }
-.md h2 {
-  font-size: 1.05rem;
+.md h2,
+.md h3 {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
 }
 .md a {
-  color: #a5b4fc;
+  color: #ffffff;
   text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .md ul {
   list-style: disc;
-  padding-left: 1.25rem;
+  padding-left: 24px;
 }
 .md ol {
   list-style: decimal;
-  padding-left: 1.25rem;
+  padding-left: 24px;
+}
+.md li + li {
+  margin-top: 4px;
 }
 .md code {
   font-family: var(--font-mono);
-  font-size: 0.85em;
-  background: rgb(255 255 255 / 0.07);
-  border: 1px solid rgb(255 255 255 / 0.06);
-  border-radius: 0.35rem;
-  padding: 0.1rem 0.3rem;
+  font-size: var(--text-xs);
+  background: var(--color-surface-3);
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
 }
 .md pre {
-  background: rgb(2 6 23 / 0.6);
-  border: 1px solid rgb(255 255 255 / 0.08);
-  border-radius: 0.75rem;
-  padding: 0.75rem;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface-3);
+  border-radius: var(--radius-lg);
+  padding: 12px;
   overflow-x: auto;
 }
 .md pre code {
   background: none;
-  border: 0;
   padding: 0;
 }
 .md blockquote {
-  border-left: 3px solid rgb(255 255 255 / 0.15);
-  padding-left: 0.75rem;
-  color: #94a3b8;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-lg);
+  padding: 8px 12px;
+  color: #a3a3a3;
 }
 .md table {
   border-collapse: collapse;
@@ -345,6 +467,6 @@ label[for] {
 }
 .md th,
 .md td {
-  border: 1px solid rgb(255 255 255 / 0.12);
-  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-surface-4);
+  padding: 4px 8px;
 }

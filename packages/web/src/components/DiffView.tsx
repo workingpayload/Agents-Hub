@@ -9,10 +9,10 @@ function Line({ text }: { text: string }) {
     <div
       className={clsx(
         'whitespace-pre-wrap break-all px-3',
-        kind === '+' && 'bg-emerald-500/10 text-emerald-200',
-        kind === '-' && 'bg-red-500/10 text-red-200',
-        kind === '@' && 'bg-white/[0.08] text-sky-300',
-        kind !== '+' && kind !== '-' && kind !== '@' && 'text-slate-400',
+        kind === '+' && 'bg-emerald-950 text-emerald-200',
+        kind === '-' && 'bg-red-950 text-red-200',
+        kind === '@' && 'bg-surface-3 text-sky-300',
+        kind !== '+' && kind !== '-' && kind !== '@' && 'text-neutral-400',
       )}
     >
       {text || ' '}
@@ -32,14 +32,14 @@ export function FileDiff({ path, oldText, newText }: { path: string; oldText?: s
     return out.slice(0, 2000);
   }, [path, oldText, newText]);
   return (
-    <div className="overflow-hidden rounded-lg border border-white/10 bg-black/35">
-      <div className="flex items-center justify-between border-b border-white/10 px-3 py-1.5 text-xs">
-        <span className="truncate font-mono text-slate-300" title={path}>
+    <div className="overflow-hidden rounded-xl border border-surface-4 bg-black">
+      <div className="caption-4 flex items-center justify-between gap-2 bg-surface-2 px-3 py-2">
+        <span className="truncate font-mono text-neutral-200" title={path}>
           {basename(path)}
         </span>
-        <span className="text-slate-400">{oldText == null ? 'new file' : 'modified'}</span>
+        <span className="text-neutral-400">{oldText == null ? 'New file' : 'Modified'}</span>
       </div>
-      <div className="max-h-80 overflow-auto font-mono text-xs leading-5">
+      <div className="max-h-80 overflow-auto py-1 font-mono text-xs leading-5">
         {lines.map((l, i) => (
           <Line key={i} text={l} />
         ))}
@@ -64,13 +64,13 @@ export function UnifiedDiff({ diff }: { diff: string }) {
     }
     return result;
   }, [diff]);
-  if (!files.length) return <p className="text-sm text-slate-400">No changes.</p>;
+  if (!files.length) return <p className="body-6 text-neutral-400">No changes.</p>;
   return (
     <div className="space-y-3">
       {files.map((f) => (
-        <details key={f.name} open={files.length <= 6} className="overflow-hidden rounded-lg border border-white/10 bg-black/35">
-          <summary className="cursor-pointer border-b border-white/10 px-3 py-1.5 font-mono text-xs text-slate-300">{f.name}</summary>
-          <div className="max-h-96 overflow-auto font-mono text-xs leading-5">
+        <details key={f.name} open={files.length <= 6} className="overflow-hidden rounded-xl border border-surface-4 bg-black">
+          <summary className="caption-4 bg-surface-2 px-3 py-2 font-mono text-neutral-200 hover:bg-surface-3">{f.name}</summary>
+          <div className="max-h-96 overflow-auto py-1 font-mono text-xs leading-5">
             {f.lines.slice(0, 3000).map((l, i) => (
               <Line key={i} text={l} />
             ))}

@@ -1,9 +1,9 @@
-import { ArrowRight, GitBranch, XCircle } from 'lucide-react';
+import { ArrowRightIcon, GitForkIcon, XCircleIcon } from '@phosphor-icons/react';
 import { useMemo, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import type { SessionInfo, TaskInfo } from '@agent-hub/shared/client';
 import { isTaskFinished } from '@agent-hub/shared/client';
-import { AgentAvatar, Button, Card, EmptyState, StatusBadge, TaskBadge } from '../components/ui';
+import { AgentAvatar, Button, Card, EmptyState, PageHeader, Reveal, StatusBadge, TaskBadge } from '../components/ui';
 import { post } from '../lib/api';
 import { agentName, timeAgo } from '../lib/format';
 import { toastError, useHub } from '../lib/store';
@@ -12,28 +12,28 @@ function TaskNode({ task, depth }: { task: TaskInfo; depth: number }) {
   const agents = useHub((s) => s.agents);
   const child = useHub((s) => (task.childSessionId ? s.sessions[task.childSessionId] : undefined));
   return (
-    <div className="border-l-2 border-blue-300/25 py-2.5 pl-3.5" style={{ marginLeft: `${depth * 1.25}rem` }}>
+    <div className="surface-inset space-y-2 rounded-xl p-3" style={{ marginLeft: `${depth * 24}px` }}>
       <div className="flex flex-wrap items-center gap-2">
-        <ArrowRight className="h-3.5 w-3.5 text-blue-200" />
+        <ArrowRightIcon className="h-4 w-4 text-neutral-400" aria-hidden />
         <AgentAvatar agentId={task.agentId} size="sm" />
-        <span className="text-sm font-medium">{agentName(agents, task.agentId)}</span>
+        <span className="title-4 text-white">{agentName(agents, task.agentId)}</span>
         <TaskBadge status={task.status} />
-        <span className="text-xs text-slate-400">{timeAgo(task.updatedAt)}</span>
+        <span className="caption-4 text-neutral-400">{timeAgo(task.updatedAt)}</span>
         {!isTaskFinished(task.status) && (
           <Button
             size="sm"
             variant="ghost"
-            className="ml-auto text-red-300"
+            className="ml-auto text-red-300 hover:text-red-200"
             onClick={() => post(`/api/tasks/${task.id}/cancel`).catch((e) => toastError(e))}
           >
-            <XCircle className="h-3.5 w-3.5" /> Cancel
+            <XCircleIcon className="h-4 w-4" /> Cancel
           </Button>
         )}
       </div>
-      <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-xs text-slate-400">{task.prompt}</p>
-      {task.error && <p className="mt-1 text-xs text-red-300">{task.error}</p>}
+      <p className="body-6 line-clamp-2 whitespace-pre-wrap text-neutral-300">{task.prompt}</p>
+      {task.error && <p className="caption-4 text-red-300">{task.error}</p>}
       {child && (
-        <Link to={`/sessions/${child.id}`} className="mt-1 inline-flex items-center gap-1.5 text-xs text-blue-200 hover:underline">
+        <Link to={`/sessions/${child.id}`} className="link caption-3 inline-flex items-center gap-2">
           Open session <StatusBadge status={child.status} />
         </Link>
       )}
@@ -67,31 +67,47 @@ export function TasksPage() {
     ]);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
-      <div>
-        <h1 className="px-1 text-2xl font-semibold tracking-tight">Delegations</h1>
-        <p className="text-sm text-slate-400">
-          Agents can hand work to each other with the hub's <code>delegate_task</code> tool. Each tree shows who delegated what.
-        </p>
+    <div className="mx-auto max-w-4xl space-y-8 pt-8">
+      <div className="animate-rise">
+        <PageHeader
+          title="Delegations"
+          description={
+            <>
+              Agents hand work to each other with the hub's <code className="font-mono">delegate_task</code> tool. Each tree shows who delegated what.
+            </>
+          }
+        />
       </div>
       {tasks.length === 0 ? (
-        <EmptyState icon={<GitBranch className="h-8 w-8" />} title="No delegations yet">
-          Ask an agent to “use Agent Hub to have Claude review this” — it will call the hub tools, and you approve the hand-off.
+        <EmptyState
+          icon={<GitForkIcon className="h-6 w-6" />}
+          title="No delegations yet"
+          action={
+            <Link to="/" className="link button-sm">
+              Start a session
+            </Link>
+          }
+        >
+          Ask an agent to “use Agent Hub to have Claude review this”. It calls the hub tools, and you approve the handoff.
         </EmptyState>
       ) : (
-        roots.map((root) => (
-          <Card key={root.id} className="p-3">
-            <Link to={`/sessions/${root.id}`} className="flex items-center gap-2 hover:underline">
-              <AgentAvatar agentId={root.agentId} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{root.title}</p>
-                <p className="text-xs text-slate-400">{agentName(agents, root.agentId)}</p>
-              </div>
-              <StatusBadge status={root.status} />
-            </Link>
-            <div className="mt-2">{renderTasks(root.id, 0)}</div>
-          </Card>
-        ))
+        <div className="space-y-4">
+          {roots.map((root) => (
+            <Reveal key={root.id}>
+              <Card className="space-y-3 p-3">
+                <Link to={`/sessions/${root.id}`} className="flex items-center gap-3 rounded-xl p-1 transition-[background-color] duration-300 hover:bg-surface-3">
+                  <AgentAvatar agentId={root.agentId} />
+                  <div className="min-w-0 flex-1">
+                    <p className="title-3 truncate text-white">{root.title}</p>
+                    <p className="caption-4 text-neutral-400">{agentName(agents, root.agentId)}</p>
+                  </div>
+                  <StatusBadge status={root.status} />
+                </Link>
+                <div className="space-y-2">{renderTasks(root.id, 0)}</div>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
       )}
     </div>
   );

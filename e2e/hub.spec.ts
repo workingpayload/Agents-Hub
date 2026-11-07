@@ -46,7 +46,9 @@ test('approve a pending request from the approvals inbox', async ({ page, reques
   expect(created.status()).toBe(201);
   const session = await created.json();
 
-  await page.getByRole('link', { name: /Approvals/ }).first().click();
+  const menu = page.getByRole('button', { name: 'Open menu' });
+  if (await menu.isVisible()) await menu.click();
+  await page.getByRole('link', { name: /Approvals/ }).filter({ visible: true }).first().click();
   // Target this session's request (the permission card is labelled and links to its session).
   const card = page.getByRole('group', { name: /Permission request/ }).filter({ hasText: session.title });
   await expect(card).toBeVisible();

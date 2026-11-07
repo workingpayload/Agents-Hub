@@ -1,67 +1,25 @@
+import {
+  BellIcon,
+  GearSixIcon,
+  GitForkIcon,
+  SquaresFourIcon,
+  StopCircleIcon,
+} from '@phosphor-icons/react';
 import { clsx } from 'clsx';
-import { Bell, GitBranch, LayoutDashboard, OctagonX, Settings, Wifi, WifiOff } from 'lucide-react';
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { post } from '../lib/api';
 import { toastError, useHub } from '../lib/store';
-import { Button, Modal } from './ui';
+import { ConfirmDialog, pressable } from './ui';
 
 const NAV = [
-  { to: '/', label: 'Agents', icon: LayoutDashboard, match: (p: string) => p === '/' || p.startsWith('/sessions') },
-  { to: '/approvals', label: 'Approvals', icon: Bell, match: (p: string) => p.startsWith('/approvals') },
-  { to: '/tasks', label: 'Delegations', icon: GitBranch, match: (p: string) => p.startsWith('/tasks') },
-  { to: '/settings', label: 'Settings', icon: Settings, match: (p: string) => p.startsWith('/settings') },
+  { to: '/', label: 'Agents', icon: SquaresFourIcon, match: (p: string) => p === '/' || p.startsWith('/sessions') },
+  { to: '/approvals', label: 'Approvals', icon: BellIcon, match: (p: string) => p.startsWith('/approvals') },
+  { to: '/tasks', label: 'Delegations', icon: GitForkIcon, match: (p: string) => p.startsWith('/tasks') },
+  { to: '/settings', label: 'Settings', icon: GearSixIcon, match: (p: string) => p.startsWith('/settings') },
 ];
 
-/** Ambient iridescent light that the glass surfaces refract. */
-export function Aurora() {
-  return (
-    <div className="aurora" aria-hidden>
-      <span className="a1" />
-      <span className="a2" />
-      <span className="a3" />
-      <span className="a4" />
-    </div>
-  );
-}
-
-/** A glass "droplet" that glides to the active nav item. */
-function useLiquidIndicator(active: number) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [rect, setRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const measure = () => {
-      const el = container.querySelector<HTMLElement>(`[data-nav-index="${active}"]`);
-      if (!el || !el.offsetWidth) return setRect(null);
-      setRect({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(container);
-    return () => ro.disconnect();
-  }, [active]);
-  return { containerRef, rect };
-}
-
-function LiquidIndicator({ rect, className }: { rect: { x: number; y: number; w: number; h: number } | null; className?: string }) {
-  if (!rect) return null;
-  return (
-    <span
-      aria-hidden
-      className={clsx(
-        'pointer-events-none absolute left-0 top-0 z-0 rounded-2xl bg-white/[0.11] ring-1 ring-inset ring-white/15',
-        'shadow-[inset_0_1px_0_0_rgb(255_255_255/0.28),inset_0_-8px_16px_-12px_rgb(59_130_246/0.6),0_10px_24px_-12px_rgb(59_130_246/0.65)]',
-        'transition-[transform,width,height] duration-500 ease-[var(--ease-liquid)]',
-        className,
-      )}
-      style={{ transform: `translate(${rect.x}px, ${rect.y}px)`, width: rect.w, height: rect.h }}
-    />
-  );
-}
-
-function StopAllButton() {
+function useStopAll() {
   const [open, setOpen] = useState(false);
   const toast = useHub((s) => s.toast);
   const stop = async () => {
@@ -73,56 +31,60 @@ function StopAllButton() {
       toastError(err);
     }
   };
-  return (
-    <>
-      <Button variant="ghost" size="sm" className="text-red-200 hover:bg-red-500/15 hover:text-red-100" onClick={() => setOpen(true)} aria-label="Stop all agents">
-        <OctagonX className="h-4 w-4" />
-        <span className="hidden md:inline">Stop all</span>
-      </Button>
-      <Modal open={open} onClose={() => setOpen(false)} title="Stop every agent?">
-        <p className="text-sm text-slate-300">This kill switch stops all running sessions, cancels delegated tasks and rejects pending approvals.</p>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={stop}>
-            Stop everything
-          </Button>
-        </div>
-      </Modal>
-    </>
+  const dialog = (
+    <ConfirmDialog open={open} onClose={() => setOpen(false)} onConfirm={stop} title="Stop every agent?" confirmLabel="Stop everything">
+      This stops all running sessions, cancels delegated tasks and rejects pending approvals.
+    </ConfirmDialog>
   );
+  return { openDialog: () => setOpen(true), dialog };
 }
 
 function PendingBadge({ count, className }: { count: number; className?: string }) {
   if (count <= 0) return null;
   return (
-    <span
-      className={clsx(
-        'rounded-full bg-gradient-to-b from-amber-300 to-amber-500 px-1.5 text-[11px] font-bold leading-[18px] text-amber-950',
-        'shadow-[inset_0_1px_0_0_rgb(255_255_255/0.6),0_4px_10px_-4px_rgb(245_158_11/0.9)]',
-        className,
-      )}
-      aria-label={`${count} pending approvals`}
-    >
+    <span className={clsx('caption-3 rounded-full bg-amber-400 px-2 text-black', className)} aria-label={`${count} pending approvals`}>
       {count}
     </span>
   );
 }
 
-function ConnectionChip({ state }: { state: string }) {
+function ConnectionDot({ state }: { state: string }) {
   const open = state === 'open';
+  const label = open ? 'Connected' : state === 'connecting' ? 'Connecting' : 'Reconnecting';
   return (
-    <span
-      role="status"
-      className={clsx(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ring-1 ring-inset',
-        open ? 'bg-emerald-400/10 text-emerald-200 ring-emerald-300/20' : 'bg-amber-400/10 text-amber-100 ring-amber-300/30',
-      )}
-    >
-      {open ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-      {open ? 'Connected' : state === 'connecting' ? 'Connecting…' : 'Reconnecting…'}
+    <span role="status" className="caption-4 inline-flex items-center gap-2 text-neutral-300" title={label}>
+      <span className={clsx('h-2 w-2 rounded-full', open ? 'bg-emerald-400' : 'live-dot bg-amber-400 text-amber-400')} aria-hidden />
+      <span className={clsx(open && 'sr-only')}>{label}</span>
     </span>
+  );
+}
+
+/** Two bars that fold into an X; only transform and opacity animate. */
+function MenuToggle({ open, onClick }: { open: boolean; onClick(): void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={open}
+      aria-controls="mobile-menu"
+      aria-label={open ? 'Close menu' : 'Open menu'}
+      className={clsx('relative h-11 w-11 rounded-xl hover:bg-surface-3', pressable)}
+    >
+      <span
+        aria-hidden
+        className={clsx(
+          'absolute left-3 top-1/2 h-0.5 w-5 rounded-full bg-white transition-transform duration-500 ease-base',
+          open ? 'translate-y-0 rotate-45' : '-translate-y-1',
+        )}
+      />
+      <span
+        aria-hidden
+        className={clsx(
+          'absolute left-3 top-1/2 h-0.5 w-5 rounded-full bg-white transition-transform duration-500 ease-base',
+          open ? 'translate-y-0 -rotate-45' : 'translate-y-1',
+        )}
+      />
+    </button>
   );
 }
 
@@ -132,89 +94,113 @@ export function Layout({ children }: { children: ReactNode }) {
   const server = useHub((s) => s.server);
   const { pathname } = useLocation();
   const active = Math.max(0, NAV.findIndex((n) => n.match(pathname)));
-  const side = useLiquidIndicator(active);
-  const bottom = useLiquidIndicator(active);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const stopAll = useStopAll();
+
+  useEffect(() => setMenuOpen(false), [pathname]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false);
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen]);
 
   return (
     <div className="min-h-dvh">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-xl focus:bg-blue-600 focus:px-3 focus:py-2">
+      <a
+        href="#main"
+        className="button-sm sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-xl focus:bg-white focus:px-3 focus:py-2 focus:text-black"
+      >
         Skip to content
       </a>
 
-      <aside className="glass glass-rim fixed bottom-4 left-4 top-4 z-30 hidden w-60 flex-col rounded-[28px] p-3 md:flex" aria-label="Main navigation">
-        <Link to="/" className="mb-6 flex items-center gap-3 rounded-2xl px-2 pt-1">
-          <img src="/icons/icon-192.png" alt="" className="h-10 w-10 rounded-xl shadow-[0_8px_20px_-8px_rgb(59_130_246/0.8)]" />
-          <div className="min-w-0">
-            <p className="font-display text-[17px] font-semibold leading-tight tracking-tight">Agent Hub</p>
-            <p className="truncate text-xs text-slate-400">{server?.hostname ?? '…'}</p>
-          </div>
-        </Link>
-        <nav ref={side.containerRef} className="relative space-y-1">
-          <LiquidIndicator rect={side.rect} />
-          {NAV.map((n, i) => (
-            <Link
-              key={n.to}
-              to={n.to}
-              data-nav-index={i}
-              aria-current={i === active ? 'page' : undefined}
-              className={clsx(
-                'relative z-10 flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors duration-200',
-                i === active ? 'text-white' : 'text-slate-300 hover:bg-white/[0.04] hover:text-white',
-              )}
-            >
-              <n.icon className={clsx('h-[18px] w-[18px]', i === active && 'text-blue-200')} />
-              {n.label}
-              {n.to === '/approvals' && <PendingBadge count={pending} className="ml-auto" />}
-            </Link>
-          ))}
-        </nav>
-        <div className="mt-auto space-y-2 px-1 text-xs text-slate-400">
-          <ConnectionChip state={connection} />
-          {server && <p className="truncate px-1">This device: {server.device.name}</p>}
-        </div>
-      </aside>
-
-      <div className="flex min-h-dvh min-w-0 flex-col md:pl-[17rem]">
-        <header className="glass sticky top-3 z-30 mx-3 mt-3 flex items-center gap-2 rounded-2xl px-3 py-2 md:mx-4 md:mr-4">
-          <Link to="/" className="flex items-center gap-2 md:hidden">
+      <header className="fixed inset-x-4 top-4 z-40 flex justify-center">
+        <div className="flex w-full items-center gap-2 rounded-2xl border border-surface-4 bg-surface/80 p-2 backdrop-blur-xl md:w-auto">
+          <Link to="/" className={clsx('flex items-center gap-2 rounded-xl px-2 py-1 hover:bg-surface-3', pressable)}>
             <img src="/icons/icon-192.png" alt="" className="h-8 w-8 rounded-lg" />
-            <span className="font-display font-semibold tracking-tight">Agent Hub</span>
+            <span className="title-4 text-white">Agent Hub</span>
           </Link>
-          <div className={clsx(connection === 'open' && 'max-md:hidden', 'md:ml-1')}>
-            <ConnectionChip state={connection} />
-          </div>
-          <div className="ml-auto flex items-center gap-1">
-            <StopAllButton />
-          </div>
-        </header>
-        <main id="main" className="flex-1 px-3 pb-[var(--chrome-bottom)] pt-5 md:px-6">
-          {children}
-        </main>
-      </div>
 
-      <nav
-        ref={bottom.containerRef}
-        aria-label="Main navigation"
-        className="glass-strong glass-rim fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 grid grid-cols-4 rounded-[26px] p-1.5 md:hidden"
-      >
-        <LiquidIndicator rect={bottom.rect} className="rounded-[20px]" />
-        {NAV.map((n, i) => (
-          <Link
-            key={n.to}
-            to={n.to}
-            data-nav-index={i}
-            aria-current={i === active ? 'page' : undefined}
-            className={clsx(
-              'relative z-10 flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-[20px] text-[11px] font-medium transition-colors duration-200',
-              i === active ? 'text-white' : 'text-slate-300',
-            )}
-          >
-            <n.icon className={clsx('h-5 w-5', i === active && 'text-blue-200')} />
-            {n.label}
-            {n.to === '/approvals' && <PendingBadge count={pending} className="absolute right-[18%] top-1" />}
-          </Link>
-        ))}
-      </nav>
+          <nav aria-label="Main navigation" className="hidden items-center gap-1 md:flex">
+            {NAV.map((n, i) => (
+              <Link
+                key={n.to}
+                to={n.to}
+                aria-current={i === active ? 'page' : undefined}
+                className={clsx(
+                  'title-4 flex items-center gap-2 rounded-xl px-3 py-2',
+                  pressable,
+                  i === active ? 'bg-surface-4 text-white' : 'text-neutral-300 hover:bg-surface-3 hover:text-white',
+                )}
+              >
+                <n.icon className="h-4 w-4" weight={i === active ? 'fill' : 'regular'} />
+                {n.label}
+                {n.to === '/approvals' && <PendingBadge count={pending} />}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-2 md:ml-2">
+            <ConnectionDot state={connection} />
+            <button
+              type="button"
+              onClick={stopAll.openDialog}
+              aria-label="Stop all agents"
+              className={clsx('button-sm hidden items-center gap-2 rounded-xl px-3 py-2 text-red-300 hover:bg-red-950 md:inline-flex', pressable)}
+            >
+              <StopCircleIcon className="h-4 w-4" />
+              Stop all
+            </button>
+            <div className="relative md:hidden">
+              <MenuToggle open={menuOpen} onClick={() => setMenuOpen((o) => !o)} />
+              {!menuOpen && pending > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-amber-400" aria-hidden />}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {menuOpen && (
+        <div id="mobile-menu" className="animate-fade fixed inset-0 z-30 flex flex-col bg-black/90 px-4 pb-[var(--chrome-bottom)] pt-[var(--chrome-top)] backdrop-blur-2xl md:hidden">
+          <nav aria-label="Main navigation" className="flex flex-col gap-2 pt-4">
+            {NAV.map((n, i) => (
+              <Link
+                key={n.to}
+                to={n.to}
+                aria-current={i === active ? 'page' : undefined}
+                style={{ ['--delay' as string]: `${Math.min(i * 60, 400)}ms` }}
+                className={clsx(
+                  'menu-item heading-5 flex items-center gap-4 rounded-2xl px-4 py-3',
+                  i === active ? 'bg-surface-3 text-white' : 'text-neutral-300',
+                )}
+              >
+                <n.icon className="h-6 w-6" weight={i === active ? 'fill' : 'regular'} />
+                {n.label}
+                {n.to === '/approvals' && <PendingBadge count={pending} className="ml-auto" />}
+              </Link>
+            ))}
+          </nav>
+          <div className="menu-item mt-auto space-y-4" style={{ ['--delay' as string]: `${Math.min(NAV.length * 60, 400)}ms` }}>
+            {server && <p className="caption-4 px-4 text-neutral-400">This device: {server.device.name}</p>}
+            <button
+              type="button"
+              onClick={stopAll.openDialog}
+              className={clsx('button-md flex w-full items-center justify-center gap-2 rounded-xl bg-red-700 px-4 py-3 text-white hover:bg-red-800', pressable)}
+            >
+              <StopCircleIcon className="h-5 w-5" />
+              Stop all agents
+            </button>
+          </div>
+        </div>
+      )}
+
+      <main id="main" className="mx-auto w-full max-w-6xl px-4 pb-[var(--chrome-bottom)] pt-[var(--chrome-top)] md:px-6">
+        {children}
+      </main>
+      {stopAll.dialog}
     </div>
   );
 }

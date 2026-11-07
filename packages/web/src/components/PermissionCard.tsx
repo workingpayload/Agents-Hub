@@ -1,5 +1,5 @@
+import { CheckIcon, GitForkIcon, ShieldWarningIcon, XIcon } from '@phosphor-icons/react';
 import { clsx } from 'clsx';
-import { Check, GitBranch, ShieldAlert, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { PermissionOption, PermissionRequest } from '@agent-hub/shared/client';
@@ -7,7 +7,7 @@ import { ApiError, post } from '../lib/api';
 import { agentName, timeAgo } from '../lib/format';
 import { toastError, useHub } from '../lib/store';
 import { FileDiff } from './DiffView';
-import { AgentAvatar, Button, Spinner } from './ui';
+import { AgentAvatar, Button, Dots } from './ui';
 
 function optionVariant(o: PermissionOption) {
   if (o.kind === 'allow_once') return 'success' as const;
@@ -42,34 +42,30 @@ export function PermissionCard({ request, showSession = false }: { request: Perm
     <div
       role="group"
       aria-label={`${isDelegation ? 'Delegation' : 'Permission'} request: ${request.title}`}
-      className="glass animate-rise overflow-hidden rounded-3xl !border-amber-300/30 shadow-[inset_0_1px_0_0_rgb(253_230_138/0.25),0_0_0_1px_rgb(245_158_11/0.12),0_18px_44px_-22px_rgb(245_158_11/0.55)]"
+      className="animate-rise space-y-4 rounded-2xl border border-amber-900 bg-surface p-4"
     >
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -right-12 -top-16 -z-10 h-44 w-44 rounded-full bg-[radial-gradient(closest-side,rgb(245_158_11/0.28),transparent)] blur-2xl"
-      />
-      <div className="flex items-start gap-3 p-4">
+      <div className="flex items-start gap-3">
         <AgentAvatar agentId={request.agentId} />
         <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex flex-wrap items-center gap-x-2 text-xs text-amber-200">
-            {isDelegation ? <GitBranch className="h-3.5 w-3.5" aria-hidden /> : <ShieldAlert className="h-3.5 w-3.5" aria-hidden />}
-            <span className="font-semibold">{isDelegation ? 'Delegation request' : 'Permission request'}</span>
-            <span className="text-slate-300">· {agentName(agents, request.agentId)}</span>
-            {request.toolKind && <span className="text-slate-300">· {request.toolKind}</span>}
-            <span className="text-slate-400">· {timeAgo(request.createdAt)}</span>
+          <div className="caption-4 flex flex-wrap items-center gap-x-2 text-amber-300">
+            {isDelegation ? <GitForkIcon className="h-4 w-4" aria-hidden /> : <ShieldWarningIcon className="h-4 w-4" aria-hidden />}
+            <span className="caption-3">{isDelegation ? 'Delegation request' : 'Permission request'}</span>
+            <span className="text-neutral-300">· {agentName(agents, request.agentId)}</span>
+            {request.toolKind && <span className="text-neutral-300">· {request.toolKind}</span>}
+            <span className="text-neutral-400">· {timeAgo(request.createdAt)}</span>
           </div>
-          <p className="break-words font-display text-[15px] font-semibold text-slate-50">{request.title}</p>
+          <p className="title-3 break-words text-white">{request.title}</p>
           {showSession && session && (
-            <Link to={`/sessions/${session.id}`} className="block truncate text-xs text-blue-200 hover:text-white hover:underline">
+            <Link to={`/sessions/${session.id}`} className="link caption-4 block truncate">
               {session.title}
             </Link>
           )}
         </div>
       </div>
       {(request.detail || request.content.length > 0) && (
-        <div className="space-y-2 px-4 pb-4">
+        <div className="space-y-2">
           {request.detail && !request.content.some((c) => c.type === 'text' && c.text === request.detail) && (
-            <pre className="glass-field max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-xl p-3 font-mono text-xs text-slate-100">
+            <pre className="surface-inset max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-xl p-3 font-mono text-xs text-neutral-100">
               {request.detail}
             </pre>
           )}
@@ -77,28 +73,22 @@ export function PermissionCard({ request, showSession = false }: { request: Perm
             c.type === 'diff' ? (
               <FileDiff key={i} path={c.path} oldText={c.oldText} newText={c.newText} />
             ) : c.type === 'text' ? (
-              <pre key={i} className="glass-field max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-xl p-3 text-xs text-slate-100">
+              <pre key={i} className="surface-inset body-6 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-xl p-3 font-sans text-neutral-100">
                 {c.text}
               </pre>
             ) : null,
           )}
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2 border-t border-white/10 bg-black/15 p-3 sm:flex sm:flex-wrap">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         {request.options.map((o) => (
-          <Button
-            key={o.optionId}
-            variant={optionVariant(o)}
-            disabled={busy !== null}
-            onClick={() => respond({ optionId: o.optionId }, o.optionId)}
-            className="whitespace-nowrap"
-          >
+          <Button key={o.optionId} variant={optionVariant(o)} disabled={busy !== null} onClick={() => respond({ optionId: o.optionId }, o.optionId)}>
             {busy === o.optionId ? (
-              <Spinner />
+              <Dots label="Sending" />
             ) : o.kind.startsWith('allow') ? (
-              <Check className="h-4 w-4 shrink-0" aria-hidden />
+              <CheckIcon className="h-4 w-4 shrink-0" weight="bold" aria-hidden />
             ) : (
-              <X className="h-4 w-4 shrink-0" aria-hidden />
+              <XIcon className="h-4 w-4 shrink-0" weight="bold" aria-hidden />
             )}
             {o.name}
           </Button>

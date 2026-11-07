@@ -5,7 +5,7 @@ import { isSessionActive } from '@agent-hub/shared/client';
 import { post } from '../lib/api';
 import { agentName } from '../lib/format';
 import { toastError, useHub } from '../lib/store';
-import { Button, Field, Modal, Select, Spinner, inputCls } from './ui';
+import { Button, Dots, Field, Modal, Select, inputCls } from './ui';
 
 /** Sends output from one session to another agent (existing session or a new one). */
 export function HandoffDialog({
@@ -50,7 +50,7 @@ export function HandoffDialog({
       onClose();
       navigate(`/sessions/${res.sessionId}`);
     } catch (err) {
-      toastError(err, 'Hand-off failed');
+      toastError(err, 'Handoff failed');
     } finally {
       setBusy(false);
     }
@@ -58,7 +58,7 @@ export function HandoffDialog({
 
   return (
     <Modal open={open} onClose={onClose} title="Hand off to another agent">
-      <div className="space-y-4">
+      <div className="space-y-6">
         <Field label="Send to">
           <Select value={target} onChange={(e) => setTarget(e.target.value)}>
             <optgroup label="New session">
@@ -74,7 +74,7 @@ export function HandoffDialog({
               <optgroup label="Running sessions">
                 {targets.map((s) => (
                   <option key={s.id} value={`session:${s.id}`}>
-                    {agentName(agents, s.agentId)} — {s.title}
+                    {agentName(agents, s.agentId)}: {s.title}
                   </option>
                 ))}
               </optgroup>
@@ -82,17 +82,17 @@ export function HandoffDialog({
           </Select>
         </Field>
         <Field label="Instructions for the receiving agent (optional)">
-          <input className={inputCls} value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Review this plan and implement step 1" />
+          <input className={inputCls} value={note} onChange={(e) => setNote(e.target.value)}           placeholder="Review this plan and implement step 1" />
         </Field>
         <Field label="Content to hand off">
-          <textarea className={`${inputCls} min-h-48 font-mono text-xs`} value={text} onChange={(e) => setText(e.target.value)} />
+                    <textarea className={`${inputCls} min-h-48 font-mono !text-xs`} value={text} onChange={(e) => setText(e.target.value)} />
         </Field>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button variant="primary" disabled={!target || !text.trim() || busy} onClick={submit}>
-            {busy && <Spinner />} Hand off
+                      {busy && <Dots label="Handing off" />} Hand off
           </Button>
         </div>
       </div>

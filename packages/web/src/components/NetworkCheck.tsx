@@ -1,10 +1,10 @@
-import { CheckCircle2, Copy, RefreshCw, ShieldAlert } from 'lucide-react';
+import { ArrowClockwiseIcon, CheckCircleIcon, CopyIcon, ShieldWarningIcon } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import type { NetworkDiagnostics } from '@agent-hub/shared/client';
 import { api } from '../lib/api';
 import { desktopBridge } from '../lib/format';
 import { useHub } from '../lib/store';
-import { Button, Spinner } from './ui';
+import { Button, Dots } from './ui';
 
 /** Checks whether other devices can reach the hub (Windows Firewall) and offers a fix plus troubleshooting tips. */
 export function NetworkCheck() {
@@ -48,25 +48,28 @@ export function NetworkCheck() {
 
   const blocked = diag?.firewall.allowed === false;
   return (
-    <div className="space-y-2 text-sm">
+    <div className="body-6 space-y-3">
       {loading && !diag && (
-        <p className="flex items-center gap-2 text-slate-400">
-          <Spinner className="h-3.5 w-3.5" /> Checking network access…
+        <p role="status" className="flex items-center gap-2 text-neutral-400">
+          <Dots label="Checking" /> Checking network access
         </p>
       )}
       {diag?.firewall.allowed === true && (
-        <p className="flex items-center gap-2 text-emerald-300">
-          <CheckCircle2 className="h-4 w-4" /> Windows Firewall allows connections on port {diag.port}
-          {diag.networks[0] && ` (${diag.networks.map((n) => `${n.name} · ${n.category}`).join(', ')})`}.
+        <p className="flex items-start gap-2 text-emerald-300">
+          <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Windows Firewall allows connections on port <span className="font-mono">{diag.port}</span>
+            {diag.networks[0] && ` (${diag.networks.map((n) => `${n.name} · ${n.category}`).join(', ')})`}.
+          </span>
         </p>
       )}
       {blocked && diag && (
-        <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+        <div className="space-y-3 rounded-xl border border-amber-900 bg-surface-2 p-4">
           <p className="flex items-start gap-2 text-amber-200">
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <ShieldWarningIcon className="mt-0.5 h-4 w-4 shrink-0" />
             <span>
               Windows Firewall is blocking other devices on{' '}
-              <b>
+              <b className="font-semibold">
                 {(diag.firewall.blockedNetworks ?? []).join(', ')} ({diag.networks.map((n) => n.category).join(', ')} network)
               </b>
               . Phones will see “page not reachable” until port {diag.port} is allowed.
@@ -74,21 +77,21 @@ export function NetworkCheck() {
           </p>
           {bridge?.fixFirewall ? (
             <Button variant="primary" size="sm" onClick={fix} disabled={fixing}>
-              {fixing && <Spinner className="h-3.5 w-3.5" />} Allow through Windows Firewall
+              {fixing && <Dots label="Allowing" />} Allow through Windows Firewall
             </Button>
           ) : (
             diag.fixCommand && (
-              <div className="space-y-1">
-                <p className="text-xs text-slate-400">Run this in an administrator PowerShell on the host computer:</p>
+              <div className="space-y-2">
+                <p className="caption-2 text-neutral-400">Run this in an administrator PowerShell on the host computer:</p>
                 <div className="flex items-start gap-2">
-                  <code className="block flex-1 break-all rounded bg-black/35 p-2 font-mono text-[11px] text-slate-200">{diag.fixCommand}</code>
+                  <code className="caption-3 surface-inset block flex-1 break-all rounded-lg p-2 font-mono text-neutral-200">{diag.fixCommand}</code>
                   <Button
                     size="sm"
                     variant="ghost"
                     aria-label="Copy command"
-                    onClick={() => navigator.clipboard?.writeText(diag.fixCommand!).then(() => toast({ tone: 'info', title: 'Copied' }))}
+                    onClick={() => navigator.clipboard?.writeText(diag.fixCommand!).then(() => toast({ tone: 'info', title: 'Command copied' }))}
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    <CopyIcon className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -97,18 +100,18 @@ export function NetworkCheck() {
         </div>
       )}
       {diag?.firewall.checked === false && diag.platform === 'win32' && (
-        <p className="text-xs text-slate-400">Could not check Windows Firewall: {diag.firewall.error}</p>
+        <p className="caption-2 text-neutral-400">Could not check Windows Firewall: {diag.firewall.error}</p>
       )}
-      <details className="text-xs text-slate-400">
-        <summary className="cursor-pointer select-none text-slate-300">Phone says “page not reachable”?</summary>
-        <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>Connect the phone to the same Wi-Fi as this computer (not mobile data, a guest network or a VPN).</li>
-          <li>Use the address that matches your Wi-Fi (usually 192.168.x.x), including https:// and the port.</li>
-          <li>Allow the hub through the firewall (see above). On Windows, mark your home Wi-Fi as a Private network.</li>
-          <li>Some routers isolate wireless clients (“AP/client isolation”); turn it off for your home network.</li>
+      <details className="caption-2 text-neutral-400">
+        <summary className="cursor-pointer select-none text-neutral-200">Phone says “page not reachable”?</summary>
+        <ul className="mt-2 list-disc space-y-1 pl-6">
+          <li>Connect the phone to the same home network as this computer (not mobile data, a guest network or a VPN).</li>
+          <li>Use the address that matches your network (usually 192.168.x.x), including https:// and the port.</li>
+          <li>Allow the hub through the firewall (see above). On Windows, mark your home network as a Private network.</li>
+          <li>Some routers isolate wireless clients (“client isolation”); turn it off for your home network.</li>
         </ul>
         <Button size="sm" variant="ghost" className="mt-2" onClick={check} disabled={loading}>
-          <RefreshCw className="h-3.5 w-3.5" /> Re-check
+          <ArrowClockwiseIcon className="h-4 w-4" /> Check again
         </Button>
       </details>
     </div>

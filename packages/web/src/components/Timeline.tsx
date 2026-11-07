@@ -1,22 +1,21 @@
-import { clsx } from 'clsx';
 import {
-  Brain,
-  CheckCircle2,
-  ChevronRight,
-  Circle,
-  CircleDashed,
-  FileEdit,
-  FileSearch,
-  GitBranch,
-  Globe,
-  Loader2,
-  ShieldCheck,
-  ShieldX,
-  Terminal,
-  Trash2,
-  Wrench,
-  XCircle,
-} from 'lucide-react';
+  BrainIcon,
+  CaretRightIcon,
+  CheckCircleIcon,
+  CircleDashedIcon,
+  CircleIcon,
+  FileMagnifyingGlassIcon,
+  GitForkIcon,
+  GlobeIcon,
+  NotePencilIcon,
+  ShieldCheckIcon,
+  ShieldSlashIcon,
+  TerminalIcon,
+  TrashIcon,
+  WrenchIcon,
+  XCircleIcon,
+} from '@phosphor-icons/react';
+import { clsx } from 'clsx';
 import { memo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -43,46 +42,55 @@ export const Markdown = memo(function Markdown({ text }: { text: string }) {
   );
 });
 
-const TOOL_ICON: Partial<Record<ToolKind, typeof Wrench>> = {
-  read: FileSearch,
-  search: FileSearch,
-  edit: FileEdit,
-  delete: Trash2,
-  move: FileEdit,
-  execute: Terminal,
-  fetch: Globe,
-  think: Brain,
+const TOOL_ICON: Partial<Record<ToolKind, typeof WrenchIcon>> = {
+  read: FileMagnifyingGlassIcon,
+  search: FileMagnifyingGlassIcon,
+  edit: NotePencilIcon,
+  delete: TrashIcon,
+  move: NotePencilIcon,
+  execute: TerminalIcon,
+  fetch: GlobeIcon,
+  think: BrainIcon,
 };
 
+/** Small pulsing dot used for in progress work instead of a spinner. */
+function Working({ className }: { className?: string }) {
+  return (
+    <span role="status" aria-label="In progress" className={clsx('flex h-4 w-4 shrink-0 items-center justify-center', className)}>
+      <span className="live-dot h-2 w-2 rounded-full bg-blue-300 text-blue-300" />
+    </span>
+  );
+}
+
 function ToolStatusIcon({ status }: { status: ToolStatus }) {
-  if (status === 'completed') return <CheckCircle2 className="h-4 w-4 text-emerald-400" />;
-  if (status === 'failed') return <XCircle className="h-4 w-4 text-red-400" />;
-  if (status === 'in_progress') return <Loader2 className="h-4 w-4 animate-spin text-blue-200" />;
-  return <CircleDashed className="h-4 w-4 text-slate-400" />;
+  if (status === 'completed') return <CheckCircleIcon className="h-4 w-4 text-emerald-400" weight="fill" aria-label="Completed" />;
+  if (status === 'failed') return <XCircleIcon className="h-4 w-4 text-red-400" weight="fill" aria-label="Failed" />;
+  if (status === 'in_progress') return <Working />;
+  return <CircleDashedIcon className="h-4 w-4 text-neutral-400" aria-label="Pending" />;
 }
 
 function ToolCard({ item }: { item: Extract<TimelineItem, { type: 'tool' }> }) {
   const [open, setOpen] = useState(item.status === 'failed' || item.content.some((c) => c.type === 'diff'));
-  const Icon = TOOL_ICON[item.toolKind] ?? Wrench;
+  const Icon = TOOL_ICON[item.toolKind] ?? WrenchIcon;
   const hasBody = item.content.length > 0 || item.locations.length > 0 || item.rawInput !== undefined;
   return (
-    <div className="glass-inset rounded-2xl">
+    <div className="surface-inset rounded-xl">
       <button
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm"
+        className="body-6 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left transition-[background-color] duration-300 hover:bg-surface-3"
         onClick={() => hasBody && setOpen(!open)}
-        aria-expanded={open}
+        aria-expanded={hasBody ? open : undefined}
       >
-        <Icon className="h-4 w-4 shrink-0 text-slate-400" />
-        <span className="min-w-0 flex-1 truncate text-slate-200">{item.title}</span>
+        <Icon className="h-4 w-4 shrink-0 text-neutral-400" />
+        <span className="min-w-0 flex-1 truncate text-neutral-200">{item.title}</span>
         <ToolStatusIcon status={item.status} />
-        {hasBody && <ChevronRight className={clsx('h-4 w-4 shrink-0 text-slate-400 transition', open && 'rotate-90')} />}
+        {hasBody && <CaretRightIcon className={clsx('h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-500 ease-base', open && 'rotate-90')} />}
       </button>
       {open && hasBody && (
-        <div className="space-y-2 border-t border-white/10 p-3">
+        <div className="animate-fade space-y-2 px-3 pb-3">
           {item.locations.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {item.locations.map((l, i) => (
-                <code key={i} className="rounded bg-white/[0.08] px-1.5 py-0.5 text-xs text-slate-300">
+                <code key={i} className="rounded-md bg-surface-3 px-2 py-0.5 font-mono text-xs text-neutral-300">
                   {l.path}
                   {l.line ? `:${l.line}` : ''}
                 </code>
@@ -93,17 +101,17 @@ function ToolCard({ item }: { item: Extract<TimelineItem, { type: 'tool' }> }) {
             c.type === 'diff' ? (
               <FileDiff key={i} path={c.path} oldText={c.oldText} newText={c.newText} />
             ) : c.type === 'text' ? (
-              <pre key={i} className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded bg-black/35 p-2 font-mono text-xs text-slate-300">
+              <pre key={i} className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-black p-2 font-mono text-xs text-neutral-300">
                 {c.text}
               </pre>
             ) : (
-              <p key={i} className="text-xs text-slate-400">
+              <p key={i} className="caption-4 text-neutral-400">
                 Terminal output ({c.terminalId})
               </p>
             ),
           )}
           {item.rawInput !== undefined && item.content.length === 0 && (
-            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all rounded bg-black/35 p-2 font-mono text-xs text-slate-400">
+            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-black p-2 font-mono text-xs text-neutral-400">
               {JSON.stringify(item.rawInput, null, 2)}
             </pre>
           )}
@@ -116,16 +124,16 @@ function ToolCard({ item }: { item: Extract<TimelineItem, { type: 'tool' }> }) {
 function Thought({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <button className="block w-full text-left" onClick={() => setOpen(!open)}>
-      <div className="flex items-center gap-1.5 text-xs text-slate-400">
-        <Brain className="h-3.5 w-3.5" />
-        <span>Thinking</span>
-        <ChevronRight className={clsx('h-3.5 w-3.5 transition', open && 'rotate-90')} />
-      </div>
+    <button className="block w-full rounded-lg text-left" onClick={() => setOpen(!open)} aria-expanded={open}>
+      <span className="caption-3 flex items-center gap-1 text-neutral-400 hover:text-neutral-200">
+        <BrainIcon className="h-4 w-4" />
+        Thinking
+        <CaretRightIcon className={clsx('h-3 w-3 transition-transform duration-500 ease-base', open && 'rotate-90')} />
+      </span>
       {open ? (
-        <p className="mt-1 whitespace-pre-wrap border-l-2 border-white/10 pl-3 text-xs italic text-slate-400">{text}</p>
+        <span className="surface-inset caption-4 animate-fade mt-2 block whitespace-pre-wrap rounded-xl p-3 text-neutral-400">{text}</span>
       ) : (
-        <p className="mt-0.5 truncate pl-5 text-xs italic text-slate-500">{text}</p>
+        <span className="caption-4 mt-0.5 block truncate pl-6 text-neutral-400">{text}</span>
       )}
     </button>
   );
@@ -137,10 +145,10 @@ function PermissionItem({ item }: { item: Extract<TimelineItem, { type: 'permiss
   const r = item.resolved;
   const approved = r?.outcome === 'selected' && !/reject|deny/i.test(`${r.optionId} ${r.optionName}`);
   return (
-    <div className="flex items-center gap-2 text-xs text-slate-400">
-      {approved ? <ShieldCheck className="h-4 w-4 text-emerald-400" /> : <ShieldX className="h-4 w-4 text-red-400" />}
+    <div className="caption-4 flex items-center gap-2 text-neutral-400">
+      {approved ? <ShieldCheckIcon className="h-4 w-4 text-emerald-400" /> : <ShieldSlashIcon className="h-4 w-4 text-red-400" />}
       <span className="min-w-0 truncate">
-        {item.title} — <span className={approved ? 'text-emerald-300' : 'text-red-300'}>{r?.optionName ?? 'Pending'}</span>
+        {item.title}: <span className={approved ? 'text-emerald-300' : 'text-red-300'}>{r?.optionName ?? 'Pending'}</span>
         {r && <span> · {r.by.name}</span>}
       </span>
     </div>
@@ -151,29 +159,29 @@ function Delegation({ item }: { item: Extract<TimelineItem, { type: 'delegation'
   const agents = useHub((s) => s.agents);
   const task = useHub((s) => s.tasks[item.id]);
   return (
-    <div className="glass-inset rounded-2xl !border-blue-300/20 bg-blue-400/[0.06] p-3.5">
-      <div className="flex items-center gap-2 text-sm">
-        <GitBranch className="h-4 w-4 text-blue-200" />
-        <span className="text-slate-300">Delegated to</span>
+    <div className="surface-inset space-y-2 rounded-xl p-3">
+      <div className="body-6 flex items-center gap-2">
+        <GitForkIcon className="h-4 w-4 text-blue-300" />
+        <span className="text-neutral-300">Delegated to</span>
         <AgentAvatar agentId={item.agentId} size="sm" />
-        <span className="font-medium">{agentName(agents, item.agentId)}</span>
+        <span className="title-4 text-white">{agentName(agents, item.agentId)}</span>
         <span className="ml-auto">
           <TaskBadge status={item.status} />
         </span>
       </div>
-      <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-xs text-slate-400">{item.prompt}</p>
+      <p className="caption-4 line-clamp-3 whitespace-pre-wrap text-neutral-400">{item.prompt}</p>
       {task?.result && item.status === 'completed' && (
-        <details className="mt-2">
-          <summary className="text-xs font-medium text-blue-200">Result</summary>
-          <div className="mt-1 rounded bg-black/25 p-2 text-sm">
+        <details>
+          <summary className="caption-3 text-neutral-200">Result</summary>
+          <div className="body-6 mt-2 rounded-lg bg-black p-3">
             <Markdown text={task.result} />
           </div>
         </details>
       )}
-      {task?.error && <p className="mt-2 text-xs text-red-300">{task.error}</p>}
+      {task?.error && <p className="caption-4 text-red-300">{task.error}</p>}
       {item.childSessionId && (
-        <Link to={`/sessions/${item.childSessionId}`} className="mt-2 inline-block text-xs font-medium text-blue-200 hover:text-white hover:underline">
-          Open sub-agent session →
+        <Link to={`/sessions/${item.childSessionId}`} className="link caption-3 inline-block">
+          Open subagent session →
         </Link>
       )}
     </div>
@@ -182,24 +190,22 @@ function Delegation({ item }: { item: Extract<TimelineItem, { type: 'delegation'
 
 export function TimelineView({ items }: { items: TimelineItem[] }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {items.map((item) => {
         switch (item.type) {
           case 'user':
             return (
               <div key={item.id} className="flex justify-end">
-                <div className="max-w-[88%] rounded-[20px] rounded-br-md bg-gradient-to-br from-blue-500/35 to-violet-500/30 px-4 py-2.5 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.22),0_10px_24px_-14px_rgb(59_130_246/0.8)] ring-1 ring-inset ring-white/15">
-                  {item.from.kind !== 'device' && (
-                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-blue-100">{item.from.name}</p>
-                  )}
-                  <p className="whitespace-pre-wrap break-words text-sm text-slate-100">{item.text}</p>
-                  {item.from.kind === 'device' && <p className="mt-1 text-right text-[10px] text-slate-400">{item.from.name}</p>}
+                <div className="max-w-[88%] space-y-1 rounded-2xl rounded-br-sm bg-surface-4 px-4 py-2">
+                  {item.from.kind !== 'device' && <p className="caption-2 uppercase tracking-wide text-neutral-300">{item.from.name}</p>}
+                  <p className="body-6 whitespace-pre-wrap break-words text-white">{item.text}</p>
+                  {item.from.kind === 'device' && <p className="caption-5 text-right text-neutral-400">{item.from.name}</p>}
                 </div>
               </div>
             );
           case 'agent':
             return (
-              <div key={item.id} className="text-sm text-slate-200">
+              <div key={item.id} className="body-6 text-neutral-200">
                 <Markdown text={item.text} />
               </div>
             );
@@ -209,19 +215,19 @@ export function TimelineView({ items }: { items: TimelineItem[] }) {
             return <ToolCard key={item.id} item={item} />;
           case 'plan':
             return (
-              <div key={item.id} className="glass-inset rounded-2xl p-3">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Plan</p>
+              <div key={item.id} className="surface-inset space-y-2 rounded-xl p-3">
+                <p className="caption-2 uppercase tracking-wide text-neutral-400">Plan</p>
                 <ul className="space-y-1">
                   {item.entries.map((e, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
+                    <li key={i} className="body-6 flex items-start gap-2">
                       {e.status === 'completed' ? (
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                        <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" weight="fill" />
                       ) : e.status === 'in_progress' ? (
-                        <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-blue-200" />
+                        <Working className="mt-0.5" />
                       ) : (
-                        <Circle className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                        <CircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
                       )}
-                      <span className={clsx(e.status === 'completed' && 'text-slate-400 line-through')}>{e.content}</span>
+                      <span className={clsx(e.status === 'completed' ? 'text-neutral-400 line-through' : 'text-neutral-200')}>{e.content}</span>
                     </li>
                   ))}
                 </ul>
@@ -236,8 +242,12 @@ export function TimelineView({ items }: { items: TimelineItem[] }) {
               <p
                 key={item.id}
                 className={clsx(
-                  'text-center text-xs',
-                  item.level === 'error' ? 'rounded-2xl bg-red-500/10 px-3 py-2 text-red-200 ring-1 ring-inset ring-red-300/20' : item.level === 'warn' ? 'text-amber-300/80' : 'text-slate-400',
+                  'caption-4 text-center',
+                  item.level === 'error'
+                    ? 'rounded-xl border border-red-900 bg-red-950 px-3 py-2 text-red-200'
+                    : item.level === 'warn'
+                      ? 'text-amber-300'
+                      : 'text-neutral-400',
                 )}
               >
                 {item.text}
@@ -245,12 +255,12 @@ export function TimelineView({ items }: { items: TimelineItem[] }) {
             );
           case 'turn_end':
             return item.stopReason === 'end_turn' ? (
-              <div key={item.id} className="border-t border-white/[0.06]" />
+              <div key={item.id} className="h-2" aria-hidden />
             ) : (
-              <div key={item.id} className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-slate-400">
-                <div className="h-px flex-1 bg-white/[0.08]" />
+              <div key={item.id} className="caption-2 flex items-center gap-2 uppercase tracking-wide text-neutral-400">
+                <div className="h-px flex-1 bg-surface-4" />
                 {item.stopReason.replace(/_/g, ' ')}
-                <div className="h-px flex-1 bg-white/[0.08]" />
+                <div className="h-px flex-1 bg-surface-4" />
               </div>
             );
           default:

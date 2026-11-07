@@ -1,8 +1,11 @@
-import { ChevronUp, Folder, GitBranch, HardDrive } from 'lucide-react';
+import { ArrowUpIcon, FolderIcon, GitBranchIcon, HardDrivesIcon } from '@phosphor-icons/react';
+import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
 import type { DirectoryListing } from '@agent-hub/shared/client';
 import { api } from '../lib/api';
-import { Button, Modal, Spinner, inputCls } from './ui';
+import { Button, Loading, Modal, Skeleton, inputCls, pressable } from './ui';
+
+const rowCls = 'body-6 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-neutral-200 transition-[background-color] duration-300 hover:bg-surface-3 hover:text-white';
 
 export function DirectoryPicker({
   open,
@@ -41,7 +44,7 @@ export function DirectoryPicker({
 
   return (
     <Modal open={open} onClose={onClose} title="Choose working directory">
-      <div className="space-y-3">
+      <div className="space-y-4">
         <form
           className="flex gap-2"
           onSubmit={(e) => {
@@ -49,43 +52,60 @@ export function DirectoryPicker({
             void load(manual);
           }}
         >
-          <input className={inputCls} value={manual} onChange={(e) => setManual(e.target.value)} spellCheck={false} />
+          <input
+            className={clsx(inputCls, 'font-mono')}
+            aria-label="Folder path"
+            aria-invalid={Boolean(error)}
+            value={manual}
+            onChange={(e) => setManual(e.target.value)}
+            spellCheck={false}
+          />
           <Button type="submit">Go</Button>
         </form>
+        {error && (
+          <p role="alert" className="body-6 text-red-300">
+            {error}
+          </p>
+        )}
         {listing && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {listing.roots.map((r) => (
-              <button key={r} onClick={() => load(r)} className="inline-flex items-center gap-1 rounded-md bg-white/[0.08] px-2 py-1 text-xs text-slate-300 hover:bg-white/[0.12]">
-                <HardDrive className="h-3 w-3" /> {r}
+              <button
+                key={r}
+                onClick={() => load(r)}
+                className={clsx('caption-3 inline-flex items-center gap-1 rounded-lg bg-surface-3 px-2 py-1 font-mono text-neutral-200 hover:bg-surface-4', pressable)}
+              >
+                <HardDrivesIcon className="h-3 w-3" /> {r}
               </button>
             ))}
           </div>
         )}
-        {error && <p className="text-sm text-red-300">{error}</p>}
-        <div className="max-h-[45dvh] overflow-y-auto rounded-lg border border-white/10">
+        <div className="surface-inset max-h-[45dvh] overflow-y-auto rounded-xl p-1">
           {loading && (
-            <div className="flex justify-center p-6">
-              <Spinner />
-            </div>
+            <Loading label="Loading folders" className="space-y-1 p-1">
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-8" />
+              ))}
+            </Loading>
           )}
           {!loading && listing && (
-            <ul className="divide-y divide-white/[0.06]">
+            <ul className="space-y-0.5">
               {listing.parent && (
                 <li>
-                  <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/[0.06]" onClick={() => load(listing.parent)}>
-                    <ChevronUp className="h-4 w-4 text-slate-400" /> ..
+                  <button className={rowCls} onClick={() => load(listing.parent)}>
+                    <ArrowUpIcon className="h-4 w-4 text-neutral-400" /> Up one level
                   </button>
                 </li>
               )}
               {listing.entries.map((e) => (
                 <li key={e.path}>
-                  <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/[0.06]" onClick={() => load(e.path)}>
-                    {e.isGitRepo ? <GitBranch className="h-4 w-4 text-emerald-400" /> : <Folder className="h-4 w-4 text-slate-400" />}
+                  <button className={rowCls} onClick={() => load(e.path)}>
+                    {e.isGitRepo ? <GitBranchIcon className="h-4 w-4 text-emerald-400" /> : <FolderIcon className="h-4 w-4 text-neutral-400" />}
                     <span className="truncate">{e.name}</span>
                   </button>
                 </li>
               ))}
-              {listing.entries.length === 0 && <li className="px-3 py-4 text-center text-sm text-slate-400">No sub-folders</li>}
+              {listing.entries.length === 0 && <li className="body-6 px-3 py-4 text-center text-neutral-400">No subfolders</li>}
             </ul>
           )}
         </div>

@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import type { NotifyPayload } from '@agent-hub/shared/client';
-import { Aurora, Layout } from './components/Layout';
+import { Layout } from './components/Layout';
 import { Toasts } from './components/Toasts';
+import { EmptyState } from './components/ui';
 import { desktopBridge, isDesktopShell } from './lib/format';
 import { useHub } from './lib/store';
 import { hubSocket } from './lib/ws';
@@ -57,6 +58,24 @@ function useNotifications() {
   }, [pending]);
 }
 
+function NotFound() {
+  return (
+    <div className="mx-auto max-w-xl pt-16">
+      <EmptyState
+        icon={<span className="heading-6 font-mono">404</span>}
+        title="This page doesn't exist"
+        action={
+          <Link to="/" className="button-sm inline-flex rounded-xl bg-white px-3 py-2 text-black transition-colors duration-300 hover:bg-neutral-200">
+            Back to your agents
+          </Link>
+        }
+      >
+        The link may be old, or the session it pointed to was deleted.
+      </EmptyState>
+    </div>
+  );
+}
+
 function Authenticated() {
   const token = useHub((s) => s.token);
   useNotifications();
@@ -77,7 +96,7 @@ function Authenticated() {
         <Route path="/approvals" element={<ApprovalsPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
   );
@@ -86,7 +105,6 @@ function Authenticated() {
 export function App() {
   return (
     <>
-      <Aurora />
       <Routes>
         <Route path="/pair" element={<PairPage />} />
         <Route path="/login" element={<LoginPage />} />

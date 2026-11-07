@@ -17,12 +17,13 @@ export function basename(p: string): string {
   return parts[parts.length - 1] ?? p;
 }
 
-export const AGENT_STYLE: Record<string, { color: string; short: string; glow: string }> = {
-  copilot: { color: 'from-violet-400 to-fuchsia-600', short: 'GH', glow: 'rgb(168 85 247 / 0.35)' },
-  claude: { color: 'from-amber-300 to-orange-600', short: 'Cl', glow: 'rgb(249 115 22 / 0.32)' },
-  codex: { color: 'from-emerald-300 to-teal-600', short: 'Cx', glow: 'rgb(16 185 129 / 0.3)' },
-  gemini: { color: 'from-sky-300 to-blue-600', short: 'Ge', glow: 'rgb(59 130 246 / 0.34)' },
-  echo: { color: 'from-slate-300 to-slate-600', short: 'Ec', glow: 'rgb(148 163 184 / 0.25)' },
+/** Flat identity colour per agent; every shade keeps white initials above 4.5:1 contrast. */
+export const AGENT_STYLE: Record<string, { color: string; short: string }> = {
+  copilot: { color: 'bg-violet-600', short: 'GH' },
+  claude: { color: 'bg-orange-700', short: 'Cl' },
+  codex: { color: 'bg-emerald-700', short: 'Cx' },
+  gemini: { color: 'bg-blue-600', short: 'Ge' },
+  echo: { color: 'bg-neutral-600', short: 'Ec' },
 };
 
 export function agentName(agents: AgentInfo[], id: string): string {
@@ -30,22 +31,22 @@ export function agentName(agents: AgentInfo[], id: string): string {
 }
 
 export const STATUS_STYLE: Record<SessionStatus, { label: string; cls: string }> = {
-  starting: { label: 'Starting', cls: 'bg-sky-400/10 text-sky-200 ring-sky-300/25' },
-  idle: { label: 'Ready', cls: 'bg-emerald-400/10 text-emerald-200 ring-emerald-300/25' },
-  running: { label: 'Working', cls: 'bg-blue-400/12 text-blue-100 ring-blue-300/30' },
-  awaiting_permission: { label: 'Needs approval', cls: 'bg-amber-400/12 text-amber-100 ring-amber-300/35' },
-  stopped: { label: 'Stopped', cls: 'bg-white/[0.06] text-slate-300 ring-white/12' },
-  error: { label: 'Error', cls: 'bg-red-400/12 text-red-200 ring-red-300/30' },
+  starting: { label: 'Starting', cls: 'text-sky-300' },
+  idle: { label: 'Ready', cls: 'text-emerald-300' },
+  running: { label: 'Working', cls: 'text-blue-300' },
+  awaiting_permission: { label: 'Needs approval', cls: 'text-amber-300' },
+  stopped: { label: 'Stopped', cls: 'text-neutral-300' },
+  error: { label: 'Error', cls: 'text-red-300' },
 };
 
 export const TASK_STYLE: Record<TaskStatus, { label: string; cls: string }> = {
-  pending_approval: { label: 'Awaiting approval', cls: 'bg-amber-400/12 text-amber-100 ring-amber-300/35' },
-  running: { label: 'Running', cls: 'bg-blue-400/12 text-blue-100 ring-blue-300/30' },
-  completed: { label: 'Completed', cls: 'bg-emerald-400/10 text-emerald-200 ring-emerald-300/25' },
-  failed: { label: 'Failed', cls: 'bg-red-400/12 text-red-200 ring-red-300/30' },
-  denied: { label: 'Denied', cls: 'bg-white/[0.06] text-slate-300 ring-white/12' },
-  cancelled: { label: 'Cancelled', cls: 'bg-white/[0.06] text-slate-300 ring-white/12' },
-  timeout: { label: 'Timed out', cls: 'bg-red-400/12 text-red-200 ring-red-300/30' },
+  pending_approval: { label: 'Awaiting approval', cls: 'text-amber-300' },
+  running: { label: 'Running', cls: 'text-blue-300' },
+  completed: { label: 'Completed', cls: 'text-emerald-300' },
+  failed: { label: 'Failed', cls: 'text-red-300' },
+  denied: { label: 'Denied', cls: 'text-neutral-300' },
+  cancelled: { label: 'Cancelled', cls: 'text-neutral-300' },
+  timeout: { label: 'Timed out', cls: 'text-red-300' },
 };
 
 export function guessDeviceName(): string {

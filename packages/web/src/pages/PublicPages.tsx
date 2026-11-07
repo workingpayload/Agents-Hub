@@ -1,11 +1,24 @@
-import { KeyRound, ShieldCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowRightIcon, DownloadSimpleIcon, KeyIcon, ShieldCheckIcon } from '@phosphor-icons/react';
+import { clsx } from 'clsx';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { DeviceInfo, PublicInfo } from '@agent-hub/shared/client';
-import { Button, Card, Field, Spinner, inputCls } from '../components/ui';
+import { Button, Card, Dots, Field, Reveal, inputCls, pressable } from '../components/ui';
 import { api, post } from '../lib/api';
 import { guessDeviceName } from '../lib/format';
 import { useHub } from '../lib/store';
+
+function Brand({ title, subtitle }: { title: string; subtitle?: ReactNode }) {
+  return (
+    <div className="flex items-center gap-3">
+      <img src="/icons/icon-192.png" alt="" className="h-12 w-12 rounded-xl" />
+      <div className="min-w-0">
+        <h1 className="heading-5 text-white">{title}</h1>
+        {subtitle && <p className="body-6 text-neutral-400">{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
 
 export function PairPage() {
   const navigate = useNavigate();
@@ -41,54 +54,65 @@ export function PairPage() {
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
-      <Card className="w-full max-w-md space-y-5 p-6">
-        <div className="flex items-center gap-3">
-          <img src="/icons/icon-192.png" alt="" className="h-12 w-12 rounded-xl" />
-          <div>
-            <h1 className="text-xl font-semibold">Pair with Agent Hub</h1>
-            <p className="text-sm text-slate-400">{info ? `on ${info.hostname}` : 'Connecting…'}</p>
-          </div>
-        </div>
+    <main id="main" className="flex min-h-dvh items-center justify-center p-4">
+      <Card className="animate-rise w-full max-w-md space-y-6 p-6">
+        <Brand title="Pair with Agent Hub" subtitle={info ? `On ${info.hostname}` : 'Connecting…'} />
         {existing && (
-          <p className="rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-200">
-            This device is already paired. <Link to="/" className="underline">Open the dashboard</Link>
+          <p className="surface-inset body-6 rounded-xl p-3 text-emerald-300">
+            This device is already paired.{' '}
+            <Link to="/" className="link">
+              Open the dashboard
+            </Link>
           </p>
         )}
-        <Field label="Name this device">
-          <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} maxLength={80} />
-        </Field>
-        {code ? (
-          <p className="flex items-center gap-2 text-sm text-slate-300">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" /> Pairing code from QR detected
-          </p>
-        ) : (
-          <Field label="6-digit PIN" hint="Shown on the host computer under Settings → Devices → Pair a new device.">
-            <input
-              className={`${inputCls} text-center font-mono text-2xl tracking-[0.4em]`}
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-            />
+        <form
+          className="space-y-6"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submit();
+          }}
+        >
+          <Field label="Name this device">
+            <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} maxLength={80} />
           </Field>
-        )}
-        {error && <p className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300">{error}</p>}
-        <Button variant="primary" size="lg" className="w-full" disabled={busy || (!code && pin.length !== 6)} onClick={submit}>
-          {busy ? <Spinner /> : <KeyRound className="h-4 w-4" />} Pair this device
-        </Button>
+          {code ? (
+            <p className="body-6 flex items-center gap-2 text-neutral-300">
+              <ShieldCheckIcon className="h-4 w-4 text-emerald-400" /> Pairing code from QR detected
+            </p>
+          ) : (
+            <Field label="Six digit PIN" hint="Shown on the host computer under Settings → Devices → Pair a new device.">
+              <input
+                className={clsx(inputCls, 'heading-5 text-center font-mono tracking-widest sm:heading-5')}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={pin}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'pair-error' : undefined}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+              />
+            </Field>
+          )}
+          {error && (
+            <p id="pair-error" role="alert" className="body-6 text-red-300">
+              {error}
+            </p>
+          )}
+          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={busy || (!code && pin.length !== 6)}>
+            {busy ? <Dots label="Pairing" /> : <KeyIcon className="h-5 w-5" />} Pair this device
+          </Button>
+        </form>
         {info?.caFingerprint && (
-          <p className="text-xs text-slate-400">
-            Verify the hub certificate fingerprint starts with <code className="text-slate-300">{info.caFingerprint.slice(0, 17)}</code>.{' '}
-            <Link to="/setup" className="text-blue-200 underline hover:text-white">
+          <p className="caption-4 text-neutral-400">
+            Check that the hub certificate fingerprint starts with <code className="font-mono text-neutral-200">{info.caFingerprint.slice(0, 17)}</code>.{' '}
+            <Link to="/setup" className="link">
               Trust the certificate
             </Link>{' '}
-            to enable notifications.
+            to turn on notifications.
           </p>
         )}
       </Card>
-    </div>
+    </main>
   );
 }
 
@@ -110,18 +134,18 @@ export function LoginPage() {
   }, [hash, navigate, setToken]);
   if (!missing) return null;
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
-      <Card className="max-w-md space-y-3 p-6 text-sm text-slate-300">
-        <h1 className="text-lg font-semibold text-slate-100">Sign in to Agent Hub</h1>
-        <p>
-          On the host computer, open the link printed by <code>agent-hub serve</code> (or use the desktop app). On other devices,{' '}
-          <Link to="/pair" className="text-blue-200 underline hover:text-white">
+    <main id="main" className="flex min-h-dvh items-center justify-center p-4">
+      <Card className="animate-rise w-full max-w-md space-y-4 p-6">
+        <Brand title="Sign in to Agent Hub" />
+        <p className="body-6 text-neutral-300">
+          On the host computer, open the link printed by <code className="font-mono">agent-hub serve</code>, or use the desktop app. On other devices,{' '}
+          <Link to="/pair" className="link">
             pair with a PIN
           </Link>
           .
         </p>
       </Card>
-    </div>
+    </main>
   );
 }
 
@@ -132,12 +156,12 @@ export function SetupPage() {
   }, []);
   const steps: [string, string[]][] = [
     [
-      'iPhone / iPad',
+      'iPhone and iPad',
       [
         'Open this page in Safari and tap “Download certificate”, then Allow.',
         'Settings → General → VPN & Device Management → Agent Hub Local CA → Install.',
-        'Settings → General → About → Certificate Trust Settings → enable full trust for Agent Hub Local CA.',
-        'Reload, tap Share → Add to Home Screen, and enable notifications in Settings inside the app.',
+        'Settings → General → About → Certificate Trust Settings → turn on full trust for Agent Hub Local CA.',
+        'Reload, tap Share → Add to Home Screen, and turn on notifications in Settings inside the app.',
       ],
     ],
     [
@@ -151,7 +175,7 @@ export function SetupPage() {
     [
       'Windows',
       [
-        'Download the certificate and double-click it → Install Certificate → Current User.',
+        'Download the certificate and double click it → Install Certificate → Current User.',
         'Choose “Place all certificates in the following store” → Trusted Root Certification Authorities.',
         'Restart the browser.',
       ],
@@ -160,39 +184,44 @@ export function SetupPage() {
       'macOS',
       [
         'Download the certificate and open it in Keychain Access (login keychain).',
-        'Double-click “Agent Hub Local CA” → Trust → When using this certificate: Always Trust.',
+        'Double click “Agent Hub Local CA” → Trust → When using this certificate: Always Trust.',
       ],
     ],
   ];
   return (
-    <div className="mx-auto max-w-2xl space-y-4 p-4">
-      <div className="flex items-center gap-3">
-        <img src="/icons/icon-192.png" alt="" className="h-10 w-10 rounded-xl" />
-        <h1 className="text-xl font-semibold">Trust the hub on this device</h1>
-      </div>
-      <p className="text-sm text-slate-400">
-        Agent Hub uses a private certificate authority created on {info?.hostname ?? 'the host'}. Installing it lets this device open the hub
-        without warnings, install it as an app and receive push notifications. Only install it on devices you own.
-      </p>
-      <Card className="space-y-2 p-4">
-        <a href="/ca.crt" download>
-          <Button variant="primary">Download certificate</Button>
-        </a>
-        <p className="break-all font-mono text-xs text-slate-400">SHA-256 {info?.caFingerprint}</p>
-      </Card>
-      {steps.map(([title, list]) => (
-        <Card key={title} className="p-4">
-          <h2 className="mb-2 font-semibold">{title}</h2>
-          <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-300">
-            {list.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ol>
+    <main id="main" className="mx-auto max-w-2xl space-y-8 px-4 py-16">
+      <div className="animate-rise space-y-4">
+        <Brand title="Trust the hub on this device" />
+        <p className="body-5 text-neutral-300">
+          Agent Hub uses a private certificate authority created on {info?.hostname ?? 'the host'}. Installing it lets this device open the hub
+          without warnings, install it as an app and receive push notifications. Only install it on devices you own.
+        </p>
+        <Card className="space-y-3 p-4">
+          <a
+            href="/ca.crt"
+            download
+            className={clsx('button-sm inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-black hover:bg-neutral-200', pressable)}
+          >
+            <DownloadSimpleIcon className="h-4 w-4" /> Download certificate
+          </a>
+          <p className="caption-4 break-all font-mono text-neutral-400">SHA-256 {info?.caFingerprint}</p>
         </Card>
+      </div>
+      {steps.map(([title, list]) => (
+        <Reveal key={title} as="section" aria-label={title}>
+          <Card className="space-y-3 p-4">
+            <h2 className="title-2 text-white">{title}</h2>
+            <ol className="body-6 list-decimal space-y-2 pl-6 text-neutral-300">
+              {list.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ol>
+          </Card>
+        </Reveal>
       ))}
-      <Link to="/pair" className="inline-block text-sm text-blue-200 underline hover:text-white">
-        Continue to pairing →
+      <Link to="/pair" className="link button-sm inline-flex items-center gap-2">
+        Continue to pairing <ArrowRightIcon className="h-4 w-4" />
       </Link>
-    </div>
+    </main>
   );
 }

@@ -1,10 +1,11 @@
-import { SendHorizonal, Square, X } from 'lucide-react';
+import { PaperPlaneRightIcon, StopIcon, XIcon } from '@phosphor-icons/react';
+import { clsx } from 'clsx';
 import { useState, type KeyboardEvent } from 'react';
 import type { SessionInfo } from '@agent-hub/shared/client';
 import { isSessionActive } from '@agent-hub/shared/client';
 import { del, post } from '../lib/api';
 import { toastError } from '../lib/store';
-import { Button, Spinner } from './ui';
+import { Button, Dots, pressable } from './ui';
 
 export function Composer({ session }: { session: SessionInfo }) {
   const [text, setText] = useState('');
@@ -37,22 +38,22 @@ export function Composer({ session }: { session: SessionInfo }) {
     <div className="space-y-2">
       {session.queue.length > 0 && (
         <div className="space-y-1">
-          <p className="text-xs text-slate-400">Queued ({session.queue.length}) — sent when the agent is free</p>
+          <p className="caption-4 text-neutral-400">Queued ({session.queue.length}), sent when the agent is free</p>
           {session.queue.map((q) => (
-            <div key={q.id} className="glass-inset flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs text-slate-200">
+            <div key={q.id} className="surface caption-3 flex items-center gap-2 rounded-xl py-1 pl-3 pr-1 text-neutral-200">
               <span className="min-w-0 flex-1 truncate">{q.text}</span>
               <button
-                className="rounded-full p-1 text-slate-400 transition-colors duration-200 hover:bg-white/10 hover:text-slate-100 pointer-coarse:p-2"
+                className={clsx('rounded-full p-1 text-neutral-400 hover:bg-surface-3 hover:text-white pointer-coarse:p-2', pressable)}
                 aria-label="Remove queued prompt"
                 onClick={() => del(`/api/sessions/${session.id}/queue/${q.id}`).catch((e) => toastError(e))}
               >
-                <X className="h-3.5 w-3.5" />
+                <XIcon className="h-4 w-4" />
               </button>
             </div>
           ))}
         </div>
       )}
-      <div className="glass glass-rim flex items-end gap-2 rounded-[22px] p-1.5">
+      <div className="field flex items-end gap-2 rounded-2xl p-2">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -62,37 +63,35 @@ export function Composer({ session }: { session: SessionInfo }) {
           aria-label="Message"
           placeholder={
             !active
-              ? 'Session is not running — restart it to continue'
+              ? 'Session is not running. Restart it to continue'
               : session.mode === 'terminal'
                 ? 'Type into the terminal…'
                 : busy
-                  ? 'Agent is working — your message will be queued…'
+                  ? 'Agent is working. Your message will be queued…'
                   : 'Message the agent…'
           }
-          className="min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 text-base text-slate-100 placeholder:text-slate-400 focus:outline-none focus-visible:outline-none disabled:opacity-60 sm:text-sm"
+          className="body-3 sm:body-6 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-white placeholder:text-neutral-400 focus:outline-none focus-visible:outline-none disabled:opacity-60"
         />
         {busy && session.mode === 'structured' && (
           <Button
             variant="secondary"
-            size="lg"
-            className="h-11 w-11 rounded-2xl px-0"
+            className="h-10 w-10 px-0"
             title="Cancel the current turn"
             aria-label="Cancel the current turn"
             onClick={() => post(`/api/sessions/${session.id}/cancel`).catch((e) => toastError(e))}
           >
-            <Square className="h-4 w-4" />
+            <StopIcon className="h-4 w-4" weight="fill" />
           </Button>
         )}
         <Button
           variant="primary"
-          size="lg"
-          className="h-11 w-11 rounded-2xl px-0"
+          className="h-10 w-10 px-0"
           disabled={!text.trim() || !active || sending}
           onClick={send}
           title="Send"
           aria-label="Send"
         >
-          {sending ? <Spinner /> : <SendHorizonal className="h-4 w-4" />}
+          {sending ? <Dots label="Sending" /> : <PaperPlaneRightIcon className="h-4 w-4" weight="fill" />}
         </Button>
       </div>
     </div>

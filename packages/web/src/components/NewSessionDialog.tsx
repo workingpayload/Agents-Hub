@@ -1,11 +1,12 @@
-import { FolderOpen } from 'lucide-react';
+import { FolderOpenIcon } from '@phosphor-icons/react';
+import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { AutoApprove, DelegationPolicy, HubSettings, IsolationMode, SessionInfo, SessionMode } from '@agent-hub/shared/client';
 import { api, post } from '../lib/api';
 import { toastError, useHub } from '../lib/store';
 import { DirectoryPicker } from './DirectoryPicker';
-import { Button, Field, Modal, Select, Spinner, inputCls } from './ui';
+import { Button, Dots, Field, Modal, Select, inputCls, pressable } from './ui';
 
 export function NewSessionDialog({ open, onClose, agentId }: { open: boolean; onClose(): void; agentId?: string }) {
   const agents = useHub((s) => s.agents);
@@ -67,7 +68,7 @@ export function NewSessionDialog({ open, onClose, agentId }: { open: boolean; on
 
   return (
     <Modal open={open} onClose={onClose} title="New agent session">
-      <div className="space-y-4">
+      <div className="space-y-6">
         <Field label="Agent">
           <Select value={agent} onChange={(e) => setAgent(e.target.value)}>
             {usable.map((a) => (
@@ -82,7 +83,7 @@ export function NewSessionDialog({ open, onClose, agentId }: { open: boolean; on
             label="Mode"
             hint={
               mode === 'structured'
-                ? 'Rich chat with approve/deny buttons, delegation and history.'
+                ? 'Rich chat with approve and deny buttons, delegation and history.'
                 : 'Mirrors the interactive CLI; answer prompts by typing.'
             }
           >
@@ -90,12 +91,16 @@ export function NewSessionDialog({ open, onClose, agentId }: { open: boolean; on
               {(['structured', 'terminal'] as const).map((m) => (
                 <button
                   key={m}
+                  type="button"
                   disabled={!info[m].available}
                   title={info[m].reason}
+                  aria-pressed={mode === m}
                   onClick={() => setMode(m)}
-                  className={`rounded-lg px-3 py-2 text-sm ring-1 transition disabled:opacity-40 ${
-                    mode === m ? 'bg-blue-500/20 text-blue-50 ring-blue-300/60 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.2),0_8px_20px_-12px_rgb(59_130_246/0.9)]' : 'bg-white/[0.04] text-slate-300 ring-white/12 hover:bg-white/[0.08]'
-                  }`}
+                  className={clsx(
+                    'title-4 rounded-xl border px-3 py-2',
+                    pressable,
+                    mode === m ? 'border-white bg-white text-black' : 'border-surface-4 bg-surface-3 text-neutral-200 hover:bg-surface-4',
+                  )}
                 >
                   {m === 'structured' ? 'Structured (chat)' : 'Terminal'}
                 </button>
@@ -105,9 +110,9 @@ export function NewSessionDialog({ open, onClose, agentId }: { open: boolean; on
         )}
         <Field label="Working directory">
           <div className="flex gap-2">
-            <input className={inputCls} value={cwd} onChange={(e) => setCwd(e.target.value)} spellCheck={false} />
-            <Button onClick={() => setPicker(true)} title="Browse">
-              <FolderOpen className="h-4 w-4" />
+            <input className={clsx(inputCls, 'font-mono')} value={cwd} onChange={(e) => setCwd(e.target.value)} spellCheck={false} />
+            <Button onClick={() => setPicker(true)} title="Browse" aria-label="Browse folders">
+              <FolderOpenIcon className="h-4 w-4" />
             </Button>
           </div>
         </Field>
@@ -119,7 +124,7 @@ export function NewSessionDialog({ open, onClose, agentId }: { open: boolean; on
             </Select>
           </Field>
           {mode === 'structured' && (
-            <Field label="Auto-approve">
+            <Field label="Auto approve">
               <Select value={autoApprove} onChange={(e) => setAutoApprove(e.target.value as AutoApprove)}>
                 <option value="none">Nothing (ask me)</option>
                 <option value="read">Reads & searches</option>
@@ -146,7 +151,7 @@ export function NewSessionDialog({ open, onClose, agentId }: { open: boolean; on
             Cancel
           </Button>
           <Button variant="primary" disabled={!agent || busy} onClick={submit}>
-            {busy && <Spinner />} Start session
+            {busy && <Dots label="Starting" />} Start session
           </Button>
         </div>
       </div>

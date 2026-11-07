@@ -1,9 +1,14 @@
-import { Maximize2, MonitorSmartphone } from 'lucide-react';
+import { ArrowsOutIcon, DevicesIcon } from '@phosphor-icons/react';
+import { clsx } from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import { hubSocket } from '../lib/ws';
+import { pressable } from './ui';
+
+const FALLBACK_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+const GEIST_MONO = `"Geist Mono Variable", ${FALLBACK_MONO}`;
 
 const KEYS: { label: string; data: string }[] = [
   { label: 'Esc', data: '\x1b' },
@@ -52,10 +57,10 @@ export function TerminalView({ sessionId, live }: { sessionId: string; live: boo
     const term = new Terminal({
       convertEol: false,
       cursorBlink: true,
-      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+      fontFamily: FALLBACK_MONO,
       fontSize: baseFont(),
       allowTransparency: true,
-      theme: { background: 'rgba(0,0,0,0)', foreground: '#e2e8f0', cursor: '#93c5fd', selectionBackground: 'rgba(147,197,253,0.3)' },
+      theme: { background: 'rgba(0,0,0,0)', foreground: '#e5e5e5', cursor: '#ffffff', selectionBackground: 'rgba(255,255,255,0.25)' },
       scrollback: 5000,
     });
     const fit = new FitAddon();
@@ -141,7 +146,18 @@ export function TerminalView({ sessionId, live }: { sessionId: string; live: boo
       applySize();
     });
     ro.observe(el);
+    // Swap in Geist Mono once loaded; cell metrics change, so re-apply the grid size.
+    let disposed = false;
+    void document.fonts
+      ?.load(`13px "Geist Mono Variable"`)
+      .then(() => {
+        if (disposed) return;
+        term.options.fontFamily = GEIST_MONO;
+        applySize();
+      })
+      .catch(() => undefined);
     return () => {
+      disposed = true;
       ro.disconnect();
       term.textarea?.removeEventListener('focus', onFocus);
       input.dispose();
@@ -160,32 +176,38 @@ export function TerminalView({ sessionId, live }: { sessionId: string; live: boo
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
       {/* The fit addon measures the host's computed size, so padding/border live on the wrapper. */}
-      <div className="glass flex min-h-[320px] flex-1 rounded-3xl p-2">
-        <div ref={ref} className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-[#020617]/75" />
+      <div className="surface flex min-h-80 flex-1 rounded-2xl p-2">
+        <div ref={ref} className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl bg-black" />
       </div>
       {size && (
-        <div className="flex items-center gap-2 px-1 text-[11px] text-slate-400">
-          <MonitorSmartphone className="h-3.5 w-3.5" />
-          <span data-testid="pty-size" className="min-w-0 truncate">
+        <div className="caption-3 flex items-center gap-2 px-1 text-neutral-400">
+          <DevicesIcon className="h-4 w-4" />
+          <span data-testid="pty-size" className="min-w-0 truncate font-mono tabular-nums">
             {size.cols}×{size.rows} · sized for {mine ? 'this screen' : (size.driverName ?? 'another device')}
           </span>
           {!mine && (
             <button
-              className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-white/[0.08] px-3 py-1.5 font-medium text-slate-100 ring-1 ring-inset ring-white/15 transition-colors duration-200 hover:bg-white/[0.14] pointer-coarse:min-h-11"
+              className={clsx(
+                'button-xsm ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-surface-3 px-3 py-2 text-neutral-100 hover:bg-surface-4 pointer-coarse:min-h-11',
+                pressable,
+              )}
               onClick={() => claimRef.current()}
             >
-              <Maximize2 className="h-3 w-3" /> Fit to this screen
+              <ArrowsOutIcon className="h-3 w-3" /> Fit to this screen
             </button>
           )}
         </div>
       )}
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {KEYS.map((k) => (
           <button
             key={k.label}
             disabled={!live}
             onClick={() => hubSocket.send({ type: 'pty_input', sessionId, data: k.data })}
-            className="shrink-0 rounded-xl bg-white/[0.07] px-3 py-1.5 font-mono text-xs text-slate-100 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.1)] ring-1 ring-inset ring-white/12 transition-colors duration-200 hover:bg-white/[0.12] active:bg-white/[0.18] disabled:opacity-40 pointer-coarse:min-h-11 pointer-coarse:min-w-11"
+            className={clsx(
+              'caption-3 shrink-0 rounded-xl border border-surface-4 bg-surface-3 px-3 py-2 font-mono text-neutral-100 hover:bg-surface-4 pointer-coarse:min-h-11 pointer-coarse:min-w-11',
+              pressable,
+            )}
           >
             {k.label}
           </button>
